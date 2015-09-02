@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp">
+        <LinearLayout
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="议题1"
+                    android:layout_gravity="right"
+                    android:textSize="26sp"
+                    android:textStyle="bold"
+                    android:drawablePadding="10dp"
+                    android:drawableLeft="@drawable/doc_subject"
+                android:textColor="@color/dark_blue"/>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="@drawable/dotted_line"/>
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:id="@+id/doc_item1"
+                          android:padding="10dp"
+                    android:background="?android:attr/selectableItemBackground">
+                <ImageView android:layout_width="80dp" android:layout_height="120dp"
+                           android:layout_gravity="center"
+                        android:src="@drawable/doc_word"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="word文档"
+                        android:maxWidth="120dp"/>
+            </LinearLayout>
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:orientation="vertical"
+                          android:padding="10dp"
+                          android:id="@+id/doc_item2"
+                          android:background="?android:attr/selectableItemBackground">
+                <ImageView android:layout_width="80dp" android:layout_height="120dp"
+                           android:layout_gravity="center"
+                           android:src="@drawable/doc_excel"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:layout_gravity="center"
+                          android:text="Excel文档"
+                          android:maxWidth="120dp"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:orientation="horizontal"
+                  android:padding="16dp">
+        <LinearLayout
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                      android:text="议题2"
+                      android:layout_gravity="right"
+                      android:textSize="26sp"
+                      android:textStyle="bold"
+                      android:drawablePadding="10dp"
+                      android:drawableLeft="@drawable/doc_subject"
+                      android:textColor="@color/dark_blue"/>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="@drawable/dotted_line"/>
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:orientation="vertical"
+                          android:id="@+id/doc_item3"
+                          android:padding="10dp"
+                          android:background="?android:attr/selectableItemBackground">
+                <ImageView android:layout_width="80dp" android:layout_height="120dp"
+                           android:layout_gravity="center"
+                           android:src="@drawable/doc_ppt"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:layout_gravity="center"
+                          android:text="ppt文档"
+                          android:maxWidth="120dp"/>
+            </LinearLayout>
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:orientation="vertical"
+                          android:padding="10dp"
+                          android:id="@+id/doc_item4"
+                          android:background="?android:attr/selectableItemBackground">
+                <ImageView android:layout_width="80dp" android:layout_height="120dp"
+                           android:layout_gravity="center"
+                           android:src="@drawable/doc_pdf"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:layout_gravity="center"
+                          android:text="pdf文档"
+                          android:maxWidth="120dp"/>
+            </LinearLayout>
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:orientation="vertical"
+                          android:padding="10dp"
+                          android:id="@+id/doc_item5"
+                          android:background="?android:attr/selectableItemBackground">
+                <ImageView android:layout_width="80dp" android:layout_height="120dp"
+                           android:layout_gravity="center"
+                           android:src="@drawable/doc_video"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:layout_gravity="center"
+                          android:text="视频文件"
+                          android:maxWidth="120dp"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:orientation="horizontal"
+                  android:padding="16dp">
+        <LinearLayout
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                      android:text="议题3"
+                      android:layout_gravity="right"
+                      android:textSize="26sp"
+                      android:textStyle="bold"
+                      android:drawablePadding="10dp"
+                      android:drawableLeft="@drawable/doc_subject"
+                      android:textColor="@color/dark_blue"/>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="@drawable/dotted_line"/>
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:orientation="vertical"
+                          android:padding="10dp"
+                          android:id="@+id/doc_item6"
+                          android:background="?android:attr/selectableItemBackground">
+                <ImageView android:layout_width="80dp" android:layout_height="120dp"
+                           android:layout_gravity="center"
+                           android:src="@drawable/doc_ppt"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:layout_gravity="center"
+                          android:text="ppt文档"
+                          android:maxWidth="120dp"/>
+            </LinearLayout>
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:orientation="vertical"
+                          android:padding="10dp"
+                          android:id="@+id/doc_item7"
+                          android:background="?android:attr/selectableItemBackground">
+                <ImageView android:layout_width="80dp" android:layout_height="120dp"
+                           android:layout_gravity="center"
+                           android:src="@drawable/doc_pdf"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:layout_gravity="center"
+                          android:text="pdf文档"
+                          android:maxWidth="120dp"/>
+            </LinearLayout>
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:orientation="vertical"
+                          android:padding="10dp"
+                          android:id="@+id/doc_item8"
+                          android:background="?android:attr/selectableItemBackground">
+                <ImageView android:layout_width="80dp" android:layout_height="120dp"
+                           android:layout_gravity="center"
+                           android:src="@drawable/doc_pic"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                          android:layout_gravity="center"
+                          android:text="照片图片"
+                          android:maxWidth="120dp"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+    </LinearLayout>
+</ScrollView>

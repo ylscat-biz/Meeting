@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+             android:background="@drawable/login_bg"
+        >
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
+            android:layout_gravity="center">
+        <ImageView android:layout_width="0px"
+                      android:layout_height="match_parent"
+                      android:layout_weight="1"
+                      android:gravity="center"
+                   android:src="@drawable/login_left"
+                   android:paddingTop="100dp"
+                    android:paddingBottom="100dp"
+                    android:paddingLeft="150dp"
+                    >
+        </ImageView>
+        <LinearLayout android:layout_width="0px"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:layout_margin="100dp"
+                android:padding="50dp"
+                android:background="@drawable/login_right">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                      android:textColor="@android:color/white"
+                      android:textSize="30sp"
+                      android:layout_gravity="right"
+                    android:text="登录 Login"
+                    android:textAppearance="?android:attr/textAppearanceLarge"/>
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/login_line"
+                android:scaleType="fitXY"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp"/>
+
+            <EditText android:layout_width="match_parent" android:layout_height="wrap_content"
+                      android:layout_marginTop="20dp"
+                      android:layout_marginBottom="20dp"
+                    android:hint="用户名"
+                    android:inputType="text"/>
+            <EditText android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:id="@+id/password"
+                    android:hint="密码"
+                    android:inputType="textPassword"
+                    android:layout_marginBottom="20dp"
+                    android:imeActionLabel="登录"
+                    android:imeActionId="@+id/enter"
+                    android:imeOptions="actionGo"/>
+            <ImageView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:id="@+id/ok"
+                    android:src="@drawable/login_button"/>
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>
+

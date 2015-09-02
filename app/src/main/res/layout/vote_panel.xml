@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+        android:padding="15dp">
+    <Button android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="创建投票"
+            android:id="@+id/create"
+            android:textSize="24sp"/>
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+          android:background="#000"/>
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="投票列表"/>
+    <ListView android:id="@+id/vote_list"
+            android:layout_width="match_parent" android:layout_height="wrap_content">
+
+    </ListView>
+</LinearLayout>

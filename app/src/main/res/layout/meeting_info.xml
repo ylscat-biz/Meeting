@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:paddingTop="10dp">
+        <TextView android:layout_width="180dp" android:layout_height="wrap_content"
+                android:gravity="right"
+                android:text="会议名称:"
+                  android:drawableLeft="@drawable/list_title"
+                style="@style/InfoLabel"/>
+        <TextView android:layout_width="0px" android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:paddingLeft="10dp"
+                android:id="@+id/title"
+                android:text="制定管理制度"/>
+    </LinearLayout>
+    <View android:layout_width="280dp"
+          android:layout_height="2dp"
+        android:background="@drawable/dotted_line"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:paddingTop="10dp">
+        <TextView android:layout_width="180dp" android:layout_height="wrap_content"
+                  android:gravity="right"
+                  android:text="会议时间:"
+                  android:drawableLeft="@drawable/list_time"
+                  style="@style/InfoLabel"/>
+        <TextView android:layout_width="0px" android:layout_height="wrap_content"
+                  android:layout_weight="3"
+                  android:paddingLeft="10dp"
+                  android:id="@+id/time"
+                android:text="2015-8-1 9:00 至 2015-8-3 16:00"/>
+    </LinearLayout>
+    <View android:layout_width="280dp"
+          android:layout_height="2dp"
+          android:background="@drawable/dotted_line"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:paddingTop="10dp">
+        <TextView android:layout_width="180dp" android:layout_height="wrap_content"
+                  android:gravity="right"
+                  android:text="会议地点:"
+                  android:drawableLeft="@drawable/list_location"
+                  style="@style/InfoLabel"/>
+        <TextView android:layout_width="0px" android:layout_height="wrap_content"
+                  android:layout_weight="3"
+                  android:paddingLeft="10dp"
+                  android:id="@+id/address"
+                android:text="白塔路XXX号"/>
+    </LinearLayout>
+    <View android:layout_width="280dp"
+          android:layout_height="2dp"
+          android:background="@drawable/dotted_line"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:paddingTop="10dp">
+        <TextView android:layout_width="180dp" android:layout_height="wrap_content"
+                  android:gravity="right"
+                  android:text="主持人:"
+                  android:drawableLeft="@drawable/list_host"
+                  style="@style/InfoLabel"/>
+        <TextView android:layout_width="0px" android:layout_height="wrap_content"
+                  android:layout_weight="3"
+                  android:paddingLeft="10dp"
+                  android:id="@+id/host"
+                android:text="程成"/>
+    </LinearLayout>
+    <View android:layout_width="280dp"
+          android:layout_height="2dp"
+          android:background="@drawable/dotted_line"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:paddingTop="10dp">
+        <TextView android:layout_width="180dp" android:layout_height="wrap_content"
+                  android:gravity="right"
+                  android:text="参会人员:"
+                  android:drawableLeft="@drawable/list_attend"
+                  style="@style/InfoLabel"
+                  />
+        <LinearLayout
+            android:layout_width="0px"
+            android:layout_weight="3"
+            android:paddingLeft="10dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <LinearLayout
+                android:id="@+id/attendant"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textStyle="bold"
+                    android:textColor="#090"
+                    android:drawablePadding="10dp"
+                    android:drawableRight="@drawable/list_attending"
+                    android:text="已登录"/>
+                <TextView android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
+                    android:text="张三"/>
+                <TextView android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
+                    android:text="李四"/>
+                <TextView android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
+                    android:text="王五"/>
+                <TextView android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
+                    android:text="赵六"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textStyle="bold"
+                    android:drawablePadding="10dp"
+                    android:drawableRight="@drawable/list_absent"
+                    android:text="未登录"/>
+                <TextView android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
+                    android:textColor="@color/gray"
+                    android:text="陈东"/>
+                <TextView android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
+                    android:textColor="@color/gray"
+                    android:text="顾戴"/>
+                <TextView android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
+                    android:textColor="@color/gray"
+                    android:text="邵逸夫"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+    <View android:layout_width="280dp"
+          android:layout_height="2dp"
+          android:background="@drawable/dotted_line"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:paddingTop="10dp">
+        <TextView android:layout_width="180dp" android:layout_height="wrap_content"
+                  android:gravity="right"
+                  android:text="列席人员:"
+                  android:drawableLeft="@drawable/list_guest"
+                  style="@style/InfoLabel"
+            />
+        <TextView android:layout_width="0px" android:layout_height="wrap_content"
+            android:layout_weight="3"
+            android:paddingLeft="10dp"
+            android:text="白芸馨 林至斌"/>
+    </LinearLayout>
+    <View android:layout_width="280dp"
+          android:layout_height="2dp"
+          android:background="@drawable/dotted_line"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:paddingTop="10dp">
+        <TextView android:layout_width="180dp" android:layout_height="wrap_content"
+                  android:gravity="right"
+                  android:text="会议内容:"
+                  android:drawableLeft="@drawable/list_content"
+                  style="@style/InfoLabel"
+                  />
+        <TextView android:layout_width="0px" android:layout_height="wrap_content"
+                  android:layout_weight="3"
+                  android:paddingLeft="10dp"
+                  android:id="@+id/topic"
+                  android:text="@string/topic_content"/>
+    </LinearLayout>
+</LinearLayout>

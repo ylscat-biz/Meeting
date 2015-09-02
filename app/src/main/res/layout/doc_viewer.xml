@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                  android:background="@color/blue"
+                  android:paddingLeft="15dp"
+                  android:paddingRight="15dp"
+                  android:paddingTop="5dp"
+                  android:paddingBottom="5dp"
+                  android:gravity="center_vertical">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:id="@+id/back"
+                android:text="返回"
+                  android:drawableLeft="@drawable/view_back"
+            style="@style/ButtonStyle"/>
+        <TextView android:layout_width="0px" android:layout_height="wrap_content"
+                  android:layout_weight="1"
+                  android:id="@+id/title"
+                  android:layout_centerInParent="true"/>
+
+        <TextView android:layout_width="120dp" android:layout_height="wrap_content"
+            android:id="@+id/vote"
+            android:text="投票"
+            android:drawableLeft="@drawable/view_vote"
+            style="@style/ButtonStyle"/>
+
+        <TextView android:layout_width="150dp" android:layout_height="wrap_content"
+                android:id="@+id/clear"
+                android:text="清除注释"
+                android:drawableLeft="@drawable/view_clear"
+                style="@style/ButtonStyle"/>
+
+        <TextView android:layout_width="150dp" android:layout_height="wrap_content"
+                      android:id="@+id/draw"
+                      android:text="手绘注释"
+                  android:drawableLeft="@drawable/view_draw"
+                  style="@style/ButtonStyle"/>
+    </LinearLayout>
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+          android:background="#000"/>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <arbell.demo.meeting.view.LoopingView
+            android:id="@+id/slide"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+        <SeekBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="100dp"
+            android:paddingRight="100dp"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="100dp"/>
+    </FrameLayout>
+</LinearLayout>

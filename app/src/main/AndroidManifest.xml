@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="arbell.demo.meeting"
+          android:versionCode="1"
+          android:versionName="1.0">
+    <uses-sdk android:minSdkVersion="19"/>
+    <application android:label="@string/app_name"
+                 android:icon="@drawable/ic_launcher"
+                 android:theme="@style/AppTheme">
+        <activity android:name="Login"
+                  android:label="@string/app_name"
+                android:screenOrientation="landscape"
+                android:windowSoftInputMode="stateHidden|adjustPan">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity android:name=".Schedule" android:screenOrientation="landscape"/>
+        <activity android:name=".Meeting" android:screenOrientation="landscape"
+                android:windowSoftInputMode="stateHidden|adjustPan"/>
+        <activity android:name=".DocViewer" android:screenOrientation="landscape"/>
+    </application>
+</manifest>

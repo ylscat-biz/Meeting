@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">会议决策系统</string>
+    <string name="sys_name">昆明市地方税务局\n会议决策系统</string>
+    <string name="loading">加载中 …</string>
+    <string name="release_to_refresh">放开加载</string>
+    <string name="pull_to_refresh">继续拖动可以加载</string>
+    <string name="load_finished">加载完成</string>
+    <string name="topic_content">1 制度设计\n2 计划执行表\n3 指定负责人</string>
+
+    <string name="cannot_open_buffer">无法打开缓冲器</string>
+    <string name="cannot_open_document">无法打开文档</string>
+</resources>
