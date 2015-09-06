@@ -10,53 +10,65 @@
               android:textSize="24sp"
               android:id="@+id/title"
               android:textStyle="bold"/>
-    <RadioGroup
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="10dp">
-        <RadioButton
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:text="同意"
-            android:textStyle="bold"
-            android:textSize="18sp"/>
-        <RadioButton
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:text="不同意"
-            android:textStyle="bold"
-            android:textSize="18sp"/>
-        <RadioButton
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:text="弃权"
-            android:textStyle="bold"
-            android:textSize="18sp"/>
-    </RadioGroup>
+
     <View android:layout_width="match_parent" android:layout_height="1dp"
           android:background="@color/gray"/>
 
-    <FrameLayout
-        android:layout_width="800dp"
-        android:layout_height="500dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginBottom="15dp"
-        android:background="@drawable/vote_signature_bg">
-        <TextView android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:textSize="20sp"
-                  android:textColor="@color/gray"
-                  android:text="手写签名"/>
-        <arbell.demo.meeting.view.FingerPaintView
-            android:id="@+id/sign"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-    </FrameLayout>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <ListView
+            android:id="@+id/vote_list"
+            android:layout_width="150dp"
+            android:layout_height="match_parent"
+            android:padding="10dp">
+        </ListView>
+        <FrameLayout
+            android:layout_width="600dp"
+            android:layout_height="500dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="15dp"
+            android:background="@drawable/vote_signature_bg">
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:textSize="20sp"
+                      android:textColor="@color/gray"
+                      android:text="手写签名"/>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|left">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="投票:"/>
+                <TextView
+                    android:id="@+id/result"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+            <arbell.demo.meeting.view.FingerPaintView
+                android:id="@+id/sign"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </FrameLayout>
+    </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center">
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="@string/cancel"
+            android:textSize="22sp"
+            android:gravity="center"
+            android:background="?android:selectableItemBackground"
+            android:minWidth="100dp"/>
+        <View android:layout_width="0px"
+              android:layout_height="match_parent"
+              android:layout_weight="1"/>
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -70,5 +82,8 @@
                    android:layout_marginLeft="5dp"
                    android:id="@+id/clear"
                    android:src="@drawable/vote_reset"/>
+        <View android:layout_width="0px"
+              android:layout_height="match_parent"
+              android:layout_weight="1"/>
     </LinearLayout>
 </LinearLayout>

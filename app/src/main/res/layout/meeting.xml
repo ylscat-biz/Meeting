@@ -58,6 +58,14 @@
                       android:textColor="@color/tab"
                       android:drawableTop="@drawable/m_tab_doc"
                       android:background="@drawable/tab_bg"/>
+            <TextView android:layout_width="match_parent" android:layout_height="100dp"
+                      android:id="@+id/vote"
+                      android:text="投票"
+                      android:padding="10dp"
+                      android:gravity="center"
+                      android:textColor="@color/tab"
+                      android:drawableTop="@drawable/m_tab_doc"
+                      android:background="@drawable/tab_bg"/>
             <TextView android:layout_width="wrap_content" android:layout_height="100dp"
                       android:id="@+id/annotation"
                       android:text="摘要记录"
@@ -73,6 +81,7 @@
                 android:layout_weight="1">
             <include android:id="@+id/info_panel" layout="@layout/meeting_info"/>
             <include android:id="@+id/doc_panel" layout="@layout/meeting_docs"/>
+            <include android:id="@+id/vote_panel" layout="@layout/vote_panel"/>
             <include android:id="@+id/annotation_panel" layout="@layout/annotation"/>
         </FrameLayout>
     </LinearLayout>

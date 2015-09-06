@@ -4,19 +4,40 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.SparseBooleanArray;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.*;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
-public class Meeting extends Activity implements View.OnClickListener {
+import arbell.demo.meeting.vote.DialogController;
+import arbell.demo.meeting.vote.Vote;
+import arbell.demo.meeting.vote.VoteAdapter;
+import arbell.demo.meeting.vote.VoteController;
+
+public class Meeting extends Activity implements View.OnClickListener,
+        AdapterView.OnItemClickListener,
+        DialogController.VoteCreateListener {
     public static final String TITLE = "title";
 
     private View mSelected;
-    private HashMap<View, View> mTabMap = new HashMap<View, View>();
+    private HashMap<View, View> mTabMap = new HashMap<>();
+    private View mSelectedTopic;
+    private HashMap<View, ListAdapter> mTopicMap = new HashMap<>();
+    public static VoteAdapter sVoteAdapter;
+
+    int[] icons = {R.drawable.doc_word, /*R.drawable.doc_excel,*/
+            R.drawable.doc_ppt, R.drawable.doc_pdf,
+            R.drawable.doc_pic, /*R.drawable.doc_video*/};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,12 +60,17 @@ public class Meeting extends Activity implements View.OnClickListener {
         panel.setVisibility(View.GONE);
         mTabMap.put(tab, panel);
 
+        tab = findViewById(R.id.vote);
+        tab.setOnClickListener(this);
+        panel = findViewById(R.id.vote_panel);
+        panel.setVisibility(View.GONE);
+        mTabMap.put(tab, panel);
+
         tab = findViewById(R.id.annotation);
         tab.setOnClickListener(this);
         panel = findViewById(R.id.annotation_panel);
         panel.setVisibility(View.GONE);
         mTabMap.put(tab, panel);
-
 
         onClick(first);
 
@@ -55,37 +81,29 @@ public class Meeting extends Activity implements View.OnClickListener {
             }
         });
 
-        View.OnClickListener listener = new View.OnClickListener() {
+        setupDocs();
+
+        if(sVoteAdapter == null) {
+            sVoteAdapter = new VoteAdapter(getLayoutInflater());
+            createDefaultVotes();
+        }
+        findViewById(R.id.create).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Meeting.this, DocViewer.class);
-                startActivity(intent);
-            }
-        };
-        findViewById(R.id.doc_item1).setOnClickListener(listener);
-        findViewById(R.id.doc_item2).setOnClickListener(listener);
-        findViewById(R.id.doc_item3).setOnClickListener(listener);
-        findViewById(R.id.doc_item4).setOnClickListener(listener);
-        findViewById(R.id.doc_item5).setOnClickListener(listener);
-        findViewById(R.id.doc_item6).setOnClickListener(listener);
-        findViewById(R.id.doc_item7).setOnClickListener(listener);
-        findViewById(R.id.doc_item8).setOnClickListener(listener);
-//        findViewById(R.id.create).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Dialog dialog = new Dialog(Meeting.this);
-//                dialog.setContentView(R.layout.create_vote);
+                Dialog dialog = new Dialog(Meeting.this);
+                dialog.setContentView(R.layout.create_vote);
 //                dialog.findViewById(R.id.back).setOnClickListener(new DialogController(dialog));
 //                dialog.findViewById(R.id.add).setOnClickListener(new DialogController(dialog));
 //                dialog.findViewById(R.id.done).setOnClickListener(new DialogController(dialog));
 //                dialog.setCancelable(false);
-//                dialog.show();
-//            }
-//        });
-//        createDefaultVotes();
-//        ListView lv = (ListView)findViewById(R.id.vote_list);
-//        lv.setAdapter(mVoteAdapter);
-//        lv.setOnItemClickListener(this);
+                dialog.setCanceledOnTouchOutside(false);
+                dialog.show();
+                new DialogController(dialog, Meeting.this);
+            }
+        });
+        ListView lv = (ListView)findViewById(R.id.vote_list);
+        lv.setAdapter(sVoteAdapter);
+        lv.setOnItemClickListener(this);
     }
 
     @Override
@@ -100,17 +118,105 @@ public class Meeting extends Activity implements View.OnClickListener {
             mSelected = v;
         }
     }
-/*
+
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Vote vote = (Vote)parent.getAdapter().getItem(position);
-        Dialog dialog = new Dialog(Meeting.this);
+        Dialog dialog = new Dialog(Meeting.this, android.R.style.Theme_DeviceDefault_Light_Dialog_NoActionBar);
         dialog.setContentView(R.layout.vote);
-        dialog.findViewById(R.id.back).setOnClickListener(new VoteController(dialog, vote));
-        dialog.setCancelable(false);
+        dialog.setCanceledOnTouchOutside(false);
         dialog.show();
+        new VoteController(dialog, vote);
     }
 
+    private void setupDocs() {
+        View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Meeting.this, DocViewer.class);
+                Integer tag = (Integer)v.getTag();
+                switch (tag) {
+                    case R.drawable.doc_word:
+                        intent.putExtra(DocViewer.FILE, "word");
+                        break;
+                    case R.drawable.doc_ppt:
+                        intent.putExtra(DocViewer.FILE, "ppt");
+                        break;
+                    case R.drawable.doc_pdf:
+                        intent.putExtra(DocViewer.FILE, "pdf");
+                        break;
+                    case R.drawable.doc_pic:
+                        intent.putExtra(DocViewer.FILE, "jpg");
+                        break;
+                }
+                startActivity(intent);
+            }
+        };
+
+        LayoutInflater inflater = getLayoutInflater();
+        LinearLayout ll = (LinearLayout)findViewById(R.id.public_docs);
+
+        for(int i = 0; i < 12; i ++) {
+            int index = (int)(Math.random()*icons.length);
+            ViewGroup doc = addDoc(ll, inflater,
+                    icons[index], "公共资料" + (i + 1));
+            doc.setOnClickListener(listener);
+            doc.setTag(icons[index]);
+        }
+        final ListView topicContent = (ListView)findViewById(R.id.topic_content);
+        View.OnClickListener topicControl = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(v != mSelectedTopic) {
+                    if(mSelectedTopic != null) {
+                        mSelectedTopic.setSelected(false);
+                        topicContent.setAdapter(mTopicMap.get(mSelectedTopic));
+                    }
+                    v.setSelected(true);
+                    topicContent.setAdapter(mTopicMap.get(v));
+                    mSelectedTopic = v;
+                }
+            }
+        };
+
+        ll = (LinearLayout)findViewById(R.id.meeting_topic);
+        for(int i = 0; i < 4; i++) {
+            TextView tv = (TextView)inflater.inflate(R.layout.topic_button, ll, false);
+            tv.setText("议题" + (i + 1));
+            ll.addView(tv);
+            TopicAdapter adapter = new TopicAdapter();
+            setupAdapter(adapter);
+            mTopicMap.put(tv, adapter);
+            tv.setOnClickListener(topicControl);
+        }
+        topicControl.onClick(ll.getChildAt(0));
+    }
+
+    private ViewGroup addDoc(ViewGroup container, LayoutInflater inflater,
+                        int icon, String text) {
+        ViewGroup doc = (ViewGroup)inflater.inflate(R.layout.doc_item, container, false);
+        ImageView iv = (ImageView)doc.getChildAt(0);
+        iv.setImageResource(icon);
+        TextView tv = (TextView)doc.getChildAt(1);
+        tv.setText(text);
+        tv.setSelected(true);
+        container.addView(doc);
+        return doc;
+    }
+
+    private void setupAdapter(TopicAdapter adapter) {
+        int subjectCount = (int)(Math.random()*5) + 1;
+        for(int i = 0; i < subjectCount; i++) {
+            Subject subject = new Subject();
+            subject.title = "讨论问题" + (i + 1);
+            int docCount = (int)(Math.random()*2) + 2;
+            for(int j = 1; j <= docCount; j++) {
+                int index = (int)(Math.random()*icons.length);
+                subject.mDocs.put("文档" + j, icons[index]);
+            }
+            adapter.mSubjects.add(subject);
+        }
+    }
 
     private void createDefaultVotes() {
         Vote vote = new Vote();
@@ -119,7 +225,7 @@ public class Meeting extends Activity implements View.OnClickListener {
         vote.options.add("侯磊");
         vote.options.add("何大为");
         vote.multiple = false;
-        mVoteAdapter.mVotes.add(vote);
+        sVoteAdapter.mVotes.add(vote);
 
         vote = new Vote();
         vote.title = "添置物品";
@@ -127,20 +233,26 @@ public class Meeting extends Activity implements View.OnClickListener {
         vote.options.add("文具");
         vote.options.add("药品");
         vote.multiple = true;
-        mVoteAdapter.mVotes.add(vote);
+        sVoteAdapter.mVotes.add(vote);
     }
 
-    class VoteAdapter extends BaseAdapter {
-        ArrayList<Vote> mVotes = new ArrayList<Vote>();
+    @Override
+    public void onVoteCreate(Vote vote) {
+        sVoteAdapter.mVotes.add(vote);
+        sVoteAdapter.notifyDataSetChanged();
+    }
+
+    class TopicAdapter extends BaseAdapter implements View.OnClickListener {
+        private ArrayList<Subject> mSubjects = new ArrayList<>();
 
         @Override
         public int getCount() {
-            return mVotes.size();
+            return mSubjects.size();
         }
 
         @Override
         public Object getItem(int position) {
-            return mVotes.get(position);
+            return mSubjects.get(position);
         }
 
         @Override
@@ -150,149 +262,68 @@ public class Meeting extends Activity implements View.OnClickListener {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            if(convertView == null){
-                convertView = getLayoutInflater().inflate(
-                        android.R.layout.simple_list_item_1, parent, false);
+            LayoutInflater inflater = getLayoutInflater();
+            if(convertView == null) {
+                convertView = inflater.inflate(R.layout.subject_item, parent, false);
+            }
+            Subject subject = mSubjects.get(position);
+            LinkedHashMap<String, Integer> docs = subject.mDocs;
+            TextView tv = (TextView)convertView.findViewById(R.id.subject);
+            tv.setText(subject.title);
+            LinearLayout ll = (LinearLayout)convertView.findViewById(R.id.docs);
+            int i = 0;
+            for(String name : docs.keySet()) {
+                int icon = docs.get(name);
+                ViewGroup doc;
+                if(i < ll.getChildCount()) {
+                    doc = (ViewGroup)ll.getChildAt(i);
+                    if(doc.getVisibility() != View.VISIBLE)
+                        doc.setVisibility(View.VISIBLE);
+                    ImageView iv = (ImageView)doc.getChildAt(0);
+                    iv.setImageResource(icon);
+                    tv = (TextView)doc.getChildAt(1);
+                    tv.setText(name);
+                } else {
+                    doc = addDoc(ll, inflater, icon, name);
+                    doc.setOnClickListener(this);
+                }
+                doc.setTag(icon);
+                i++;
             }
 
-            TextView tv = (TextView)convertView;
-            tv.setText((position + 1) + "   " + mVotes.get(position).title);
+            if(ll.getChildCount() > i) {
+                for(; i < ll.getChildCount(); i++) {
+                    ll.getChildAt(i).setVisibility(View.GONE);
+                }
+            }
+
             return convertView;
         }
-    }
-
-    class Vote {
-        String title;
-        ArrayList<String> options = new ArrayList<String>();
-        boolean multiple;
-    }
-
-    class DialogController implements View.OnClickListener {
-        private Dialog mDialog;
-        private LinearLayout options;
-
-        public DialogController(Dialog dialog) {
-            mDialog = dialog;
-            options = (LinearLayout)mDialog.findViewById(R.id.options);
-        }
 
         @Override
         public void onClick(View v) {
-            switch (v.getId()){
-                case R.id.back:
-                    mDialog.dismiss();
+            Intent intent = new Intent(Meeting.this, DocViewer.class);
+            Integer tag = (Integer)v.getTag();
+            switch (tag) {
+                case R.drawable.doc_word:
+                    intent.putExtra(DocViewer.FILE, "word");
                     break;
-                case R.id.add:
-                    if(checkEmpty()) {
-                        Toast.makeText(Meeting.this, "不能有空选项", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    EditText et = new EditText(Meeting.this);
-                    options.addView(et);
-                    et.requestFocus();
+                case R.drawable.doc_ppt:
+                    intent.putExtra(DocViewer.FILE, "ppt");
                     break;
-                case R.id.done:
-                    Vote vote = createVote();
-                    if(vote.title.length() == 0) {
-                        Toast.makeText(Meeting.this, "主题不能为空", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    if(vote.options.size() == 0) {
-                        Toast.makeText(Meeting.this, "还没有选项", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    mDialog.dismiss();
-                    mVoteAdapter.mVotes.add(vote);
-                    mVoteAdapter.notifyDataSetChanged();
+                case R.drawable.doc_pdf:
+                    intent.putExtra(DocViewer.FILE, "pdf");
+                    break;
+                case R.drawable.doc_pic:
+                    intent.putExtra(DocViewer.FILE, "jpg");
                     break;
             }
-        }
-
-        private boolean checkEmpty() {
-            for(int i = 0; i < options.getChildCount(); i++) {
-                EditText et = (EditText)options.getChildAt(i);
-                String item = et.getText().toString().trim();
-                if(item.length() == 0)
-                    return true;
-            }
-
-            return false;
-        }
-
-        private Vote createVote() {
-            Vote vote = new Vote();
-            EditText edit = (EditText)mDialog.findViewById(R.id.title);
-            vote.title = edit.getText().toString();
-
-            for(int i = 0; i < options.getChildCount(); i++) {
-                EditText et = (EditText)options.getChildAt(i);
-                String item = et.getText().toString().trim();
-                if(item.length() == 0)
-                    continue;
-                vote.options.add(item);
-            }
-
-            Switch sw = (Switch)mDialog.findViewById(R.id.multiple);
-            vote.multiple = sw.isChecked();
-            return vote;
+            startActivity(intent);
         }
     }
 
-    class VoteController implements View.OnClickListener, AdapterView.OnItemClickListener{
-        private Dialog mDialog;
-        private Vote mVote;
-
-        public VoteController(Dialog dialog, Vote vote) {
-            mDialog = dialog;
-            mVote = vote;
-            if(vote.multiple) {
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(Meeting.this,
-                        android.R.layout.simple_list_item_multiple_choice, vote.options);
-
-                ListView lv = (ListView) mDialog.findViewById(R.id.vote_list);
-                lv.setItemsCanFocus(false);
-                lv.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE);
-                lv.setAdapter(adapter);
-                lv.setOnItemClickListener(this);
-            }
-            else {
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(Meeting.this,
-                        android.R.layout.simple_list_item_single_choice, vote.options);
-
-                ListView lv = (ListView) mDialog.findViewById(R.id.vote_list);
-                lv.setItemsCanFocus(false);
-                lv.setChoiceMode(AbsListView.CHOICE_MODE_SINGLE);
-                lv.setAdapter(adapter);
-                lv.setOnItemClickListener(this);
-            }
-            TextView title = (TextView)dialog.findViewById(R.id.title);
-            title.setText(vote.title);
-            mDialog.findViewById(R.id.vote).setOnClickListener(this);
-        }
-
-        @Override
-        public void onClick(View v) {
-            switch (v.getId()){
-                case R.id.back:
-                    mDialog.dismiss();
-                    break;
-                case R.id.vote:
-                    mDialog.dismiss();
-                    break;
-            }
-        }
-
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            ListView lv = (ListView)parent;
-            SparseBooleanArray sba = lv.getCheckedItemPositions();
-            StringBuilder sb = new StringBuilder();
-            for(int i = 0; i < sba.size(); i++) {
-                if(sba.valueAt(i))
-                    sb.append(mVote.options.get(sba.keyAt(i))).append(" ");
-            }
-            TextView tv = (TextView)mDialog.findViewById(R.id.result);
-            tv.setText(sb.toString());
-        }
-    }*/
+    class Subject {
+        public String title;
+        public LinkedHashMap<String, Integer> mDocs = new LinkedHashMap<>();
+    }
 }

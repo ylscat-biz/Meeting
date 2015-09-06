@@ -1,4 +1,3 @@
-/*
 package com.artifex.mupdfdemo;
 
 import android.content.Context;
@@ -78,4 +77,3 @@ public class MuPDFPageAdapter extends BaseAdapter {
 		return pageView;
 	}
 }
-*/

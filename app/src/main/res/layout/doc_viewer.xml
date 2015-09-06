@@ -42,17 +42,33 @@
           android:background="#000"/>
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <arbell.demo.meeting.view.LoopingView
-            android:id="@+id/slide"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-        <SeekBar
+        android:layout_height="0px"
+        android:layout_weight="1"
+        android:id="@+id/container">
+        <ProgressBar
+            android:id="@+id/progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"/>
+        <LinearLayout
+            android:id="@+id/page_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingLeft="100dp"
             android:paddingRight="100dp"
             android:layout_gravity="bottom"
-            android:layout_marginBottom="100dp"/>
+            android:layout_marginBottom="100dp"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/page"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"/>
+            <SeekBar
+                android:id="@+id/seek"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
     </FrameLayout>
 </LinearLayout>

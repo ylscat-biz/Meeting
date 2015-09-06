@@ -30,7 +30,7 @@ public class Login extends Activity implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
-        Intent intent = new Intent(this, Meeting.class);
+        Intent intent = new Intent(this, Schedule.class);
         startActivity(intent);
         finish();
     }

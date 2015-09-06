@@ -759,7 +759,7 @@ public class ReaderView
 
 	@Override
 	public void setSelection(int arg0) {
-		throw new UnsupportedOperationException("not supported");
+		throw new UnsupportedOperationException();
 	}
 
 	private View getCached() {

@@ -20,5 +20,6 @@
         <activity android:name=".Meeting" android:screenOrientation="landscape"
                 android:windowSoftInputMode="stateHidden|adjustPan"/>
         <activity android:name=".DocViewer" android:screenOrientation="landscape"/>
+        <activity android:name=".VoteActivity" android:screenOrientation="landscape"/>
     </application>
 </manifest>

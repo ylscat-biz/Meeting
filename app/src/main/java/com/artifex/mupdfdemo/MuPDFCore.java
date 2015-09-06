@@ -62,10 +62,10 @@ public class MuPDFCore
 	private native int setFocusedWidgetTextInternal(String text);
 	private native String getFocusedWidgetTextInternal();
 	private native int getFocusedWidgetTypeInternal();
-	private native LinkInfo [] getPageLinksInternal(int page);
+	private native LinkInfo[] getPageLinksInternal(int page);
 	private native RectF[] getWidgetAreasInternal(int page);
 	private native Annotation[] getAnnotationsInternal(int page);
-	private native OutlineItem [] getOutlineInternal();
+	private native OutlineItem[] getOutlineInternal();
 	private native boolean hasOutlineInternal();
 	private native boolean needsPasswordInternal();
 	private native boolean authenticatePasswordInternal(String password);
@@ -111,7 +111,7 @@ public class MuPDFCore
 		globals = openFile(filename);
 		if (globals == 0)
 		{
-			throw new Exception(context.getString(R.string.cannot_open_document) + filename);
+			throw new Exception(context.getString(R.string.cannot_open_document));
 		}
 		file_format = fileFormatInternal();
 		isUnencryptedPDF = isUnencryptedPDFInternal();
@@ -212,7 +212,7 @@ public class MuPDFCore
 		updatePageInternal(bm, page, pageW, pageH, patchX, patchY, patchW, patchH, cookie.cookiePtr);
 	}
 
-	/*public synchronized PassClickResult passClickEvent(int page, float x, float y) {
+	public synchronized PassClickResult passClickEvent(int page, float x, float y) {
 		boolean changed = passClickEventInternal(page, x, y) != 0;
 
 		switch (WidgetType.values()[getFocusedWidgetTypeInternal()])
@@ -228,7 +228,7 @@ public class MuPDFCore
 			return new PassClickResult(changed);
 		}
 
-	}*/
+	}
 
 	public synchronized boolean setFocusedWidgetText(int page, String text) {
 		boolean success;
@@ -250,7 +250,7 @@ public class MuPDFCore
 		return signFocusedSignatureInternal(keyFile, password);
 	}
 
-	public synchronized LinkInfo [] getPageLinks(int page) {
+	public synchronized LinkInfo[] getPageLinks(int page) {
 		return getPageLinksInternal(page);
 	}
 
@@ -258,7 +258,7 @@ public class MuPDFCore
 		return getWidgetAreasInternal(page);
 	}
 
-	public synchronized Annotation [] getAnnoations(int page) {
+	public synchronized Annotation[] getAnnoations(int page) {
 		return getAnnotationsInternal(page);
 	}
 
@@ -272,7 +272,7 @@ public class MuPDFCore
 		return textAsHtml();
 	}
 
-	public synchronized TextWord [][] textLines(int page) {
+	public synchronized TextWord[][] textLines(int page) {
 		gotoPage(page);
 		TextChar[][][][] chars = text();
 
@@ -329,7 +329,7 @@ public class MuPDFCore
 		return hasOutlineInternal();
 	}
 
-	public synchronized OutlineItem [] getOutline() {
+	public synchronized OutlineItem[] getOutline() {
 		return getOutlineInternal();
 	}
 

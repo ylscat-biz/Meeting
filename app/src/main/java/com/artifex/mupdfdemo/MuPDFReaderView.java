@@ -216,7 +216,10 @@ public class MuPDFReaderView extends ReaderView {
 	}
 
 	protected void onChildSetup(int i, View v) {
-
+		if (SearchTaskResult.get() != null
+				&& SearchTaskResult.get().pageNumber == i)
+			((MuPDFView) v).setSearchBoxes(SearchTaskResult.get().searchBoxes);
+		else
 			((MuPDFView) v).setSearchBoxes(null);
 
 		((MuPDFView) v).setLinkHighlighting(mLinksEnabled);
@@ -234,7 +237,11 @@ public class MuPDFReaderView extends ReaderView {
 	}
 
 	protected void onMoveToChild(int i) {
-
+		if (SearchTaskResult.get() != null
+				&& SearchTaskResult.get().pageNumber != i) {
+			SearchTaskResult.set(null);
+			resetupChildren();
+		}
 	}
 
 	@Override
