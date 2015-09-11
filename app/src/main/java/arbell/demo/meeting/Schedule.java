@@ -39,6 +39,13 @@ public class Schedule extends Activity implements View.OnClickListener {
             }
         };
 
+        findViewById(R.id.back).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+
         final String TITLE = "title", HOST = "host", ADDRESS = "address",
                 BEGIN = "begin", END= "end", BUTTON = "button";
         String[] from = new String[]{TITLE, HOST, ADDRESS, BEGIN, END, BUTTON};
