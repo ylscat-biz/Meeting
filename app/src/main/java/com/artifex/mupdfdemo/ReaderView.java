@@ -67,7 +67,7 @@ public class ReaderView
 
 	public ReaderView(Context context) {
 		super(context);
-		mGestureDetector = new GestureDetector(this);
+		mGestureDetector = new GestureDetector(context, this);
 		mScaleGestureDetector = new ScaleGestureDetector(context, this);
 		mScroller        = new Scroller(context);
 		mStepper = new Stepper(this, this);
@@ -87,7 +87,7 @@ public class ReaderView
 		}
 		else
 		{
-			mGestureDetector = new GestureDetector(this);
+			mGestureDetector = new GestureDetector(context, this);
 			mScaleGestureDetector = new ScaleGestureDetector(context, this);
 			mScroller        = new Scroller(context);
 			mStepper = new Stepper(this, this);
