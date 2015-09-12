@@ -21,6 +21,7 @@ import android.widget.Toast;
 import com.artifex.mupdfdemo.AsyncTask;
 import com.artifex.mupdfdemo.MuPDFCore;
 import com.artifex.mupdfdemo.MuPDFPageAdapter;
+import com.artifex.mupdfdemo.MuPDFPageView;
 import com.artifex.mupdfdemo.MuPDFReaderView;
 
 import java.io.File;
@@ -139,28 +140,25 @@ public class DocViewer extends Activity implements View.OnClickListener {
             case R.id.back:
                 finish();
                 break;
-            /*case R.id.draw:
+            case R.id.draw:
                 TextView tv = (TextView)v;
-                if(mSlider.isLock) {
+                if(mSlider.getMode() != MuPDFReaderView.Mode.Viewing) {
                     tv.setText("手绘注释");
-                    mSlider.isLock = false;
+                    mSlider.setMode(MuPDFReaderView.Mode.Viewing);
                     tv.setCompoundDrawables(mDrawing, null, null, null);
                     findViewById(R.id.clear).setVisibility(View.INVISIBLE);
                 }
                 else {
                     tv.setText("保存");
-                    mSlider.isLock = true;
+                    mSlider.setMode(MuPDFReaderView.Mode.Drawing);
                     tv.setCompoundDrawables(mSaving, null, null, null);
                     findViewById(R.id.clear).setVisibility(View.VISIBLE);
                 }
                 break;
             case R.id.clear:
-                float sx = mSlider.getScrollX();
-                int w = mSlider.getWidth();
-                int index = (int)(sx/w + 0.5f);
-                FingerPaintView fpv = (FingerPaintView)mSlider.getChildAt(index);
-                fpv.clear();
-                break;*/
+                MuPDFPageView page = (MuPDFPageView)mSlider.getDisplayedView();
+                page.cancelDraw();
+                break;
             case R.id.vote:
 //                showVoteTopicDialog();
                 Intent intent = new Intent(this, VoteActivity.class);

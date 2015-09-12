@@ -31,6 +31,10 @@ public class MuPDFReaderView extends ReaderView {
 		mMode = m;
 	}
 
+	public Mode getMode() {
+		return mMode;
+	}
+
 	private void setup()
 	{
 		// Get the screen size etc to customise tap margins.
