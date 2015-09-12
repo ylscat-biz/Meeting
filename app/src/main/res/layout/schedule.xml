@@ -21,7 +21,7 @@
             android:layout_weight="1"/>
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                   android:layout_gravity="center_vertical"
-                  android:text="会议列表"
+                  android:text="@string/meeting_list"
                   android:textColor="@android:color/white"
                   android:textSize="28sp"/>
         <View
@@ -56,7 +56,7 @@
                           android:paddingBottom="15dp">
                 <TextView android:layout_width="100dp" android:layout_height="wrap_content"
                           android:gravity="center"
-                        android:text="进行中"
+                        android:text="@string/holding"
                         android:textAppearance="?android:attr/textAppearanceLarge"
                         android:textColor="@color/tab"/>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -72,7 +72,7 @@
                           android:paddingBottom="15dp">
                 <TextView android:layout_width="100dp" android:layout_height="wrap_content"
                           android:gravity="center"
-                          android:text="未开始"
+                          android:text="@string/waiting"
                           android:textAppearance="?android:attr/textAppearanceLarge"
                           android:textColor="@color/tab"/>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -88,7 +88,7 @@
                           android:paddingBottom="15dp">
                 <TextView android:layout_width="100dp" android:layout_height="wrap_content"
                           android:gravity="center"
-                          android:text="已结束"
+                          android:text="@string/closed"
                           android:textAppearance="?android:attr/textAppearanceLarge"
                           android:textColor="@color/tab"/>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"

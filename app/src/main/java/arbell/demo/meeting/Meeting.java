@@ -28,6 +28,10 @@ public class Meeting extends Activity implements View.OnClickListener,
         AdapterView.OnItemClickListener,
         DialogController.VoteCreateListener {
     public static final String TITLE = "title";
+    public static final String ID = "id";
+    public static final String ADDRESS = "address";
+    public static final String HOST = "host";
+    public static final String TIME = "time";
 
     private View mSelected;
     private HashMap<View, View> mTabMap = new HashMap<>();
@@ -45,13 +49,14 @@ public class Meeting extends Activity implements View.OnClickListener,
         setContentView(R.layout.meeting);
         String title = getIntent().getStringExtra(TITLE);
         TextView tv = (TextView)findViewById(R.id.title);
-//        tv.setText(title);
+        tv.setText(title);
 
         View tab = findViewById(R.id.info);
         View first = tab;
         tab.setOnClickListener(this);
         View panel = findViewById(R.id.info_panel);
         panel.setVisibility(View.GONE);
+        setupInfo(panel);
         mTabMap.put(tab, panel);
 
         tab = findViewById(R.id.docs);
@@ -104,6 +109,18 @@ public class Meeting extends Activity implements View.OnClickListener,
         ListView lv = (ListView)findViewById(R.id.vote_list);
         lv.setAdapter(sVoteAdapter);
         lv.setOnItemClickListener(this);
+    }
+
+    private void setupInfo(View panel) {
+        Intent intent = getIntent();
+        TextView tv = (TextView)panel.findViewById(R.id.title);
+        tv.setText(intent.getStringExtra(TITLE));
+        tv = (TextView)panel.findViewById(R.id.time);
+        tv.setText(intent.getStringExtra(TIME));
+        tv = (TextView)panel.findViewById(R.id.address);
+        tv.setText(intent.getStringExtra(ADDRESS));
+        tv = (TextView)panel.findViewById(R.id.host);
+        tv.setText(intent.getStringExtra(HOST));
     }
 
     @Override
