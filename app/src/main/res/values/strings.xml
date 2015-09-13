@@ -21,4 +21,6 @@
     <string name="holding">进行中</string>
     <string name="waiting">未开始</string>
     <string name="closed">已结束</string>
+
+    <string name="sign_in_fail">签到失败</string>
 </resources>

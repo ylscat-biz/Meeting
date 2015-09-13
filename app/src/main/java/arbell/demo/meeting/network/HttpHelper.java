@@ -1,6 +1,7 @@
 package arbell.demo.meeting.network;
 
 import android.app.Activity;
+import android.os.Handler;
 import android.util.Log;
 
 import com.android.volley.RequestQueue;
@@ -16,11 +17,9 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-/**
- * Created by sony on 2015/9/12.
- */
 public class HttpHelper {
     public static RequestQueue sRequestQueue;
+    public static Handler sHandler = new Handler();
 
     public static final String URL_BASE = "http://222.221.6.114:8066/app/";
 

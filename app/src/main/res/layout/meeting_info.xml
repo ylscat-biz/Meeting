@@ -96,19 +96,7 @@
                 <TextView android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingLeft="10dp"
-                    android:text="张三"/>
-                <TextView android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingLeft="10dp"
-                    android:text="李四"/>
-                <TextView android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingLeft="10dp"
-                    android:text="王五"/>
-                <TextView android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingLeft="10dp"
-                    android:text="赵六"/>
+                    android:id="@+id/signed_list"/>
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"

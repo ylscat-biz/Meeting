@@ -14,11 +14,19 @@ import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.android.volley.Response;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
+import arbell.demo.meeting.network.HttpHelper;
+import arbell.demo.meeting.network.Request;
 import arbell.demo.meeting.vote.DialogController;
 import arbell.demo.meeting.vote.Vote;
 import arbell.demo.meeting.vote.VoteAdapter;
@@ -42,11 +50,15 @@ public class Meeting extends Activity implements View.OnClickListener,
     int[] icons = {R.drawable.doc_word, /*R.drawable.doc_excel,*/
             R.drawable.doc_ppt, R.drawable.doc_pdf,
             R.drawable.doc_pic, /*R.drawable.doc_video*/};
+    private Update mUpdateSignedList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        signIn();
+
         setContentView(R.layout.meeting);
+        mUpdateSignedList = new Update(getIntent().getStringExtra(ID));
         String title = getIntent().getStringExtra(TITLE);
         TextView tv = (TextView)findViewById(R.id.title);
         tv.setText(title);
@@ -111,6 +123,19 @@ public class Meeting extends Activity implements View.OnClickListener,
         lv.setOnItemClickListener(this);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(mSelected != null && mSelected.getId() == R.id.info)
+            mUpdateSignedList.start();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mUpdateSignedList.stop();
+    }
+
     private void setupInfo(View panel) {
         Intent intent = getIntent();
         TextView tv = (TextView)panel.findViewById(R.id.title);
@@ -123,6 +148,24 @@ public class Meeting extends Activity implements View.OnClickListener,
         tv.setText(intent.getStringExtra(HOST));
     }
 
+    private void signIn() {
+        String params = String.format("memberid=%s&meetingid=%s",
+                Login.sMemberID, getIntent().getStringExtra(ID));
+        Request request = new Request(Request.Method.POST,
+                HttpHelper.URL_BASE + "sign",
+                params,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        if(!response.optBoolean("success"))
+                            Toast.makeText(Meeting.this,
+                                    R.string.sign_in_fail,
+                                    Toast.LENGTH_SHORT).show();
+                    }
+                });
+        HttpHelper.sRequestQueue.add(request);
+    }
+
     @Override
     public void onClick(View v) {
         if(v != mSelected) {
@@ -133,6 +176,10 @@ public class Meeting extends Activity implements View.OnClickListener,
             v.setSelected(true);
             mTabMap.get(v).setVisibility(View.VISIBLE);
             mSelected = v;
+            if(v.getId() == R.id.info)
+                mUpdateSignedList.start();
+            else if(mUpdateSignedList.running)
+                mUpdateSignedList.stop();
         }
     }
 
@@ -342,5 +389,53 @@ public class Meeting extends Activity implements View.OnClickListener,
     class Subject {
         public String title;
         public LinkedHashMap<String, Integer> mDocs = new LinkedHashMap<>();
+    }
+
+    class Update implements Runnable, Response.Listener<JSONObject> {
+        private final int INTERVAL = 3000;
+        private Request mRequest;
+        private TextView mSigned;
+        private boolean running;
+        private JSONArray mList;
+
+        public Update(String meetingId) {
+            mRequest = new Request(Request.Method.GET,
+                    HttpHelper.URL_BASE + "getSignMember?id=" + meetingId,
+                    null,
+                    this);
+            View panel = findViewById(R.id.info_panel);
+            mSigned = (TextView)panel.findViewById(R.id.signed_list);
+        }
+
+        @Override
+        public void run() {
+            HttpHelper.sRequestQueue.add(mRequest);
+            HttpHelper.sHandler.postDelayed(this, INTERVAL);
+        }
+
+        @Override
+        public void onResponse(JSONObject response) {
+            JSONArray list = response.optJSONArray("data");
+            int previous = mList == null ? 0 : mList.length();
+            if(previous < list.length()) {
+                StringBuilder sb = new StringBuilder();
+                for(int i = 0; i < list.length(); i++) {
+                    sb.append(list.optString(i));
+                    sb.append(' ');
+                }
+                mSigned.setText(sb.toString());
+            }
+            mList = list;
+        }
+
+        public void start() {
+            running = true;
+            run();
+        }
+
+        public void stop() {
+            HttpHelper.sHandler.removeCallbacks(this);
+            running = false;
+        }
     }
 }

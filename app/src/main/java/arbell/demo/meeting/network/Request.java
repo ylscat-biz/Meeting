@@ -28,6 +28,7 @@ public class Request extends JsonRequest<JSONObject> {
         public void onErrorResponse(VolleyError error) {
             Toast.makeText(Application.sContext, R.string.network_fail,
                     Toast.LENGTH_SHORT).show();
+            Log.d("Net", error.getMessage(), error);
         }
     };
 
