@@ -22,7 +22,7 @@ import arbell.demo.meeting.R;
  * Created by sony on 2015/9/12.
  */
 public class Request extends JsonRequest<JSONObject> {
-    private static Response.ErrorListener sErrorListener =
+    public static Response.ErrorListener sErrorListener =
             new Response.ErrorListener() {
         @Override
         public void onErrorResponse(VolleyError error) {
@@ -35,6 +35,12 @@ public class Request extends JsonRequest<JSONObject> {
     public Request(int method, String url, String requestBody,
                    Response.Listener<JSONObject> listener) {
         super(method, url, requestBody, listener, sErrorListener);
+    }
+
+    public Request(int method, String url, String requestBody,
+                   Response.Listener<JSONObject> listener,
+                   Response.ErrorListener errorListener) {
+        super(method, url, requestBody, listener, errorListener);
     }
 
     @Override

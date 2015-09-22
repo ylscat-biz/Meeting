@@ -8,8 +8,14 @@ import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import com.android.volley.Response;
+
+import org.json.JSONObject;
+
 import arbell.demo.meeting.Meeting;
 import arbell.demo.meeting.R;
+import arbell.demo.meeting.network.HttpHelper;
+import arbell.demo.meeting.network.Request;
 
 /**
  * Created at 03:18 2015-09-03
@@ -19,13 +25,30 @@ public class DialogController implements View.OnClickListener {
     private LinearLayout options;
     private VoteCreateListener listener;
 
+    private String topicId, subjectId;
+
     public DialogController(Dialog dialog, VoteCreateListener listener) {
         mDialog = dialog;
         options = (LinearLayout) mDialog.findViewById(R.id.options);
         this.listener = listener;
+        Context context = dialog.getContext();
+        EditText et = new EditText(context);
+        options.addView(et);
+        et.setText("同意");
+        et = new EditText(context);
+        options.addView(et);
+        et.setText("不同意");
+        et = new EditText(context);
+        options.addView(et);
+        et.setText("弃权");
         dialog.findViewById(R.id.back).setOnClickListener(this);
         dialog.findViewById(R.id.add).setOnClickListener(this);
         dialog.findViewById(R.id.done).setOnClickListener(this);
+    }
+
+    public void setTopic(String topic, String subject) {
+        topicId = topic;
+        subjectId = subject;
     }
 
     @Override
@@ -55,13 +78,25 @@ public class DialogController implements View.OnClickListener {
                     return;
                 }
                 mDialog.dismiss();
-                if(listener != null) {
-                    listener.onVoteCreate(vote);
-                }
-                else {
-                    Meeting.sVoteAdapter.mVotes.add(vote);
-                    Meeting.sVoteAdapter.notifyDataSetChanged();
-                }
+
+                StringBuilder sb = new StringBuilder("meetingid");
+                sb.append('=').append(Meeting.sMeetingID);
+                sb.append("&title=").append(vote.title);
+                if(topicId != null)
+                    sb.append("&topicid=").append(topicId);
+                if(subjectId != null)
+                    sb.append("&itemid=").append(subjectId);
+                Request request = new Request(Request.Method.POST,
+                        HttpHelper.URL_BASE + "createVote", sb.toString(),
+                        new Response.Listener<JSONObject>() {
+                            @Override
+                            public void onResponse(JSONObject response) {
+                                if(listener != null)
+                                    listener.onVoteCreate();
+                            }
+                        });
+                HttpHelper.sRequestQueue.add(request);
+
                 break;
         }
     }
@@ -96,6 +131,6 @@ public class DialogController implements View.OnClickListener {
     }
 
     public interface VoteCreateListener {
-        void onVoteCreate(Vote vote);
+        void onVoteCreate();
     }
 }

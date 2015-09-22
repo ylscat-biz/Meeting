@@ -8,10 +8,15 @@ android {
         applicationId "arbell.demo.meeting"
         minSdkVersion 14
         targetSdkVersion 22
+//        multiDexEnabled true
     }
 
     buildTypes {
         release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+        debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
@@ -22,8 +27,21 @@ android {
             jniLibs.srcDirs = ['libs']
         }
     }
+
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+    }
+
+    dexOptions {
+        javaMaxHeapSize '4g'
+    }
 }
 
 dependencies {
     compile 'eu.the4thfloor.volley:com.android.volley:2015.05.28'
+    compile fileTree(dir: 'libs', include: '*.jar')
+//    compile 'com.android.support:multidex:1.0.0'
 }

@@ -8,7 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import com.android.volley.Response;
@@ -22,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 
 import arbell.demo.meeting.network.HttpHelper;
 import arbell.demo.meeting.network.Request;
@@ -47,6 +45,7 @@ public class Schedule extends Activity implements View.OnClickListener {
                 intent.putExtra(Meeting.TIME, meeting.optString("open_time"));
                 intent.putExtra(Meeting.ADDRESS, meeting.optString("address"));
                 intent.putExtra(Meeting.HOST, meeting.optString("teamer"));
+                intent.putExtra(Meeting.TOPIC, meeting.optString("meeting_topic"));
                 startActivity(intent);
             }
         }

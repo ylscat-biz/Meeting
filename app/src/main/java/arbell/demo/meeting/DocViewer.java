@@ -3,32 +3,39 @@ package arbell.demo.meeting;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
-import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.MediaController;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
-import com.artifex.mupdfdemo.AsyncTask;
 import com.artifex.mupdfdemo.MuPDFCore;
 import com.artifex.mupdfdemo.MuPDFPageAdapter;
 import com.artifex.mupdfdemo.MuPDFPageView;
 import com.artifex.mupdfdemo.MuPDFReaderView;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 
+import java.io.File;
+
+import arbell.demo.meeting.doc.ExcelReader;
+import arbell.demo.meeting.doc.ExcelTabController;
+import arbell.demo.meeting.doc.GetDocUrl;
+import arbell.demo.meeting.view.ExcelView;
 import arbell.demo.meeting.view.FingerPaintView;
 
 /**
@@ -36,6 +43,8 @@ import arbell.demo.meeting.view.FingerPaintView;
  */
 public class DocViewer extends Activity implements View.OnClickListener {
     public static final String FILE = "file";
+    public static final String TOPIC_ID = "topic";
+    public static final String SUBJECT_ID = "subject";
 
     private MuPDFReaderView mSlider;
 
@@ -49,9 +58,19 @@ public class DocViewer extends Activity implements View.OnClickListener {
     private AlphaAnimation mHidingAnim;
     private View mPageBar;
 
+    private String topicId, subjectId;
+
+    private VideoView mVideoView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Intent intent = getIntent();
+        topicId = intent.getStringExtra(TOPIC_ID);
+        subjectId = intent.getStringExtra(SUBJECT_ID);
+        String filePath = intent.getStringExtra(FILE);
+
         setContentView(R.layout.doc_viewer);
         mProgress = findViewById(R.id.progress);
         mSeekBar = (SeekBar)findViewById(R.id.seek);
@@ -118,13 +137,20 @@ public class DocViewer extends Activity implements View.OnClickListener {
                 }
             }
         });
-        String fileName = getIntent().getStringExtra(FILE);
-        if(fileName != null) {
-            File file = new File(getFilesDir(), fileName);
-            if(!copydoc(file))
+
+        if(filePath != null) {
+            File file = new File(filePath);
+//            if(!copydoc(file))
                 readDoc(file);
         }
     }
+
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//        if(mVideoView != null)
+//            mVideoView.pause();
+//    }
 
     @Override
     protected void onDestroy() {
@@ -162,12 +188,16 @@ public class DocViewer extends Activity implements View.OnClickListener {
             case R.id.vote:
 //                showVoteTopicDialog();
                 Intent intent = new Intent(this, VoteActivity.class);
+                if(topicId != null)
+                    intent.putExtra(TOPIC_ID, topicId);
+                if(subjectId != null)
+                    intent.putExtra(SUBJECT_ID, subjectId);
                 startActivity(intent);
                 break;
         }
     }
 
-    private boolean copydoc(final File doc) {
+    /*private boolean copydoc(final File doc) {
         if(!doc.exists()) {
             mProgress.setVisibility(View.VISIBLE);
             new AsyncTask<Void, Void, File>() {
@@ -205,53 +235,124 @@ public class DocViewer extends Activity implements View.OnClickListener {
         }
         else
             return false;
-    }
+    }*/
 
     private void readDoc(File doc) {
-        if(doc.getName().equals("jpg")) {
+        String name = doc.getName();
+        String suffix = GetDocUrl.getSuffix(name);
+        if("jpg".equals(suffix) || "jpeg".equals(suffix) || "png".equals(suffix)) {
             ImageView iv = new ImageView(this);
             Bitmap bm = BitmapFactory.decodeFile(doc.getPath());
             iv.setImageBitmap(bm);
             ViewGroup vg = (ViewGroup)findViewById(R.id.container);
             vg.addView(iv, 0);
             mPageBar.setVisibility(View.GONE);
+            findViewById(R.id.draw).setVisibility(View.INVISIBLE);
             return;
         }
-        mSlider = new MuPDFReaderView(this) {
-            @Override
-            protected void onMoveToChild(int i) {
-                MuPDFCore core = mCore;
-                int count = core.countPages();
-                if(count > 1)
-                    mSeekBar.setProgress(i*MAX_RANGE/(count - 1));
-                super.onMoveToChild(i);
-            }
+        if("pdf".equals(suffix)) {
+            mSlider = new MuPDFReaderView(this) {
+                @Override
+                protected void onMoveToChild(int i) {
+                    MuPDFCore core = mCore;
+                    int count = core.countPages();
+                    if (count > 1)
+                        mSeekBar.setProgress(i * MAX_RANGE / (count - 1));
+                    super.onMoveToChild(i);
+                }
 
-            @Override
-            protected void onTapMainDocArea() {
-                if (mPageBar.getVisibility() != VISIBLE) {
-                    showButtons();
-                } else {
+                @Override
+                protected void onTapMainDocArea() {
+                    if (mPageBar.getVisibility() != VISIBLE) {
+                        showButtons();
+                    } else {
+                        hideButtons();
+                    }
+                }
+
+                @Override
+                protected void onDocMotion() {
                     hideButtons();
                 }
+            };
+            ViewGroup vg = (ViewGroup) findViewById(R.id.container);
+            vg.addView(mSlider, 0);
+            try {
+                mCore = new MuPDFCore(this, doc.getPath());
+                mSlider.setAdapter(new MuPDFPageAdapter(this, null, mCore));
+            } catch (Exception e) {
+                Toast.makeText(this, R.string.cannot_open_document,
+                        Toast.LENGTH_SHORT).show();
             }
+            mProgress.setVisibility(View.GONE);
+        }
+        else if("xls".equals(suffix) || "xlsx".equals(suffix)) {
+            ViewGroup vg = (ViewGroup)findViewById(R.id.container);
+            final View excelGroup = getLayoutInflater().inflate(R.layout.excel_view, vg, false);
+            final ExcelView excel = (ExcelView)excelGroup.findViewById(R.id.excel);
+            vg.addView(excelGroup, 0);
+            final ExcelView.GestureController controller = new ExcelView.GestureController(excel);
+            excel.setOnTouchListener(controller);
+            mPageBar.setVisibility(View.GONE);
+            findViewById(R.id.draw).setVisibility(View.INVISIBLE);
 
-            @Override
-            protected void onDocMotion() {
-                hideButtons();
-            }
-        };
-        ViewGroup vg = (ViewGroup)findViewById(R.id.container);
-        vg.addView(mSlider, 0);
-        try {
-            mCore = new MuPDFCore(this, doc.getPath());
-            mSlider.setAdapter(new MuPDFPageAdapter(this, null, mCore));
+
+
+            ExcelReader reader = new ExcelReader() {
+                @Override
+                protected void onPreExecute() {
+                    mProgress.setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                protected void onPostExecute(Workbook workbook) {
+                    mProgress.setVisibility(View.GONE);
+                    if(workbook == null) {
+                        Toast.makeText(DocViewer.this, R.string.cannot_open_document,
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    float density = getResources().getDisplayMetrics().density;
+                    LinearLayout ll = (LinearLayout)excelGroup.findViewById(R.id.sheet_panel);
+                    ExcelTabController tabController = new ExcelTabController(excel);
+                    View firstTab = null;
+                    for(int i = 0; i < workbook.getNumberOfSheets(); i++) {
+                        Sheet sheet = workbook.getSheetAt(i);
+                        ExcelView.SheetData data = new ExcelView.SheetData(
+                                sheet, density);
+                        TextView tab = new TextView(DocViewer.this);
+                        ll.addView(tab);
+                        LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams)
+                                tab.getLayoutParams();
+                        lp.setMargins(0, 0, (int)(3*density), 0);
+                        if(i == 0)
+                            firstTab = tab;
+                        tab.setText(sheet.getSheetName());
+                        tabController.addTab(tab, data);
+                        tab.setOnClickListener(tabController);
+                    }
+                    tabController.onClick(firstTab);
+                }
+            };
+            reader.execute(doc);
         }
-        catch (Exception e){
-            Toast.makeText(this, R.string.cannot_open_document,
-                    Toast.LENGTH_SHORT).show();
+        else if("mp4".equals(suffix) || "mkv".equals(suffix)) {
+            mVideoView = new VideoView(this);
+
+            //Video file
+            Uri uri = Uri.parse(doc.getAbsolutePath());
+
+            //Create media controller
+            MediaController controller = new MediaController(this);
+            mVideoView.setMediaController(controller);
+            mVideoView.setVideoURI(uri);
+
+            ViewGroup vg = (ViewGroup)findViewById(R.id.container);
+            vg.addView(mVideoView, 0);
+            mPageBar.setVisibility(View.GONE);
+            findViewById(R.id.draw).setVisibility(View.INVISIBLE);
         }
-        mProgress.setVisibility(View.GONE);
     }
 
     private void showButtons() {

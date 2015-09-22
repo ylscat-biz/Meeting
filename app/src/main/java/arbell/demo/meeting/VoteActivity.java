@@ -2,22 +2,37 @@ package arbell.demo.meeting;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import org.json.JSONObject;
+
 import arbell.demo.meeting.vote.DialogController;
 import arbell.demo.meeting.vote.Vote;
+import arbell.demo.meeting.vote.VoteAdapter;
 import arbell.demo.meeting.vote.VoteController;
+import arbell.demo.meeting.vote.VoteManager;
 
 /**
  * Created at 04:12 2015-09-07
  */
-public class VoteActivity extends Activity implements DialogController.VoteCreateListener, AdapterView.OnItemClickListener {
+public class VoteActivity extends Activity implements
+        DialogController.VoteCreateListener,
+        AdapterView.OnItemClickListener {
+    private VoteAdapter mAdapter;
+    private String topicId, subjectId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Intent intent = getIntent();
+        topicId = intent.getStringExtra(DocViewer.TOPIC_ID);
+        subjectId = intent.getStringExtra(DocViewer.SUBJECT_ID);
+
         setContentView(R.layout.vote_panel);
         findViewById(R.id.create).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -30,27 +45,33 @@ public class VoteActivity extends Activity implements DialogController.VoteCreat
 //                dialog.setCancelable(false);
                 dialog.setCanceledOnTouchOutside(false);
                 dialog.show();
-                new DialogController(dialog, VoteActivity.this);
+                DialogController dc = new DialogController(dialog, VoteActivity.this);
+                dc.setTopic(topicId, subjectId);
             }
         });
         ListView lv = (ListView)findViewById(R.id.vote_list);
-        lv.setAdapter(Meeting.sVoteAdapter);
+        mAdapter = VoteManager.sInstance.getVotes(null, topicId, subjectId);
+        lv.setAdapter(mAdapter);
         lv.setOnItemClickListener(this);
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Vote vote = (Vote)parent.getAdapter().getItem(position);
+        JSONObject vote = (JSONObject)parent.getAdapter().getItem(position);
         Dialog dialog = new Dialog(this, android.R.style.Theme_DeviceDefault_Light_Dialog_NoActionBar);
         dialog.setContentView(R.layout.vote);
         dialog.setCanceledOnTouchOutside(false);
         dialog.show();
-        new VoteController(dialog, vote);
+        new VoteController(dialog, vote) {
+            @Override
+            public void onVote() {
+                VoteManager.sInstance.getVotes(mAdapter, topicId, subjectId);
+            }
+        };
     }
 
     @Override
-    public void onVoteCreate(Vote vote) {
-        Meeting.sVoteAdapter.mVotes.add(vote);
-        Meeting.sVoteAdapter.notifyDataSetChanged();
+    public void onVoteCreate() {
+        VoteManager.sInstance.getVotes(mAdapter, topicId, subjectId);
     }
 }

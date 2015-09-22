@@ -29,8 +29,7 @@
         <TextView android:layout_width="0px" android:layout_height="wrap_content"
                   android:layout_weight="3"
                   android:paddingLeft="10dp"
-                  android:id="@+id/time"
-                android:text="2015-8-1 9:00 至 2015-8-3 16:00"/>
+                  android:id="@+id/time"/>
     </LinearLayout>
     <View android:layout_width="280dp"
           android:layout_height="2dp"
@@ -45,8 +44,7 @@
         <TextView android:layout_width="0px" android:layout_height="wrap_content"
                   android:layout_weight="3"
                   android:paddingLeft="10dp"
-                  android:id="@+id/address"
-                android:text="白塔路XXX号"/>
+                  android:id="@+id/address"/>
     </LinearLayout>
     <View android:layout_width="280dp"
           android:layout_height="2dp"
@@ -55,26 +53,52 @@
                   android:paddingTop="10dp">
         <TextView android:layout_width="180dp" android:layout_height="wrap_content"
                   android:gravity="right"
-                  android:text="主持人:"
                   android:drawableLeft="@drawable/list_host"
+                  android:text="主持人:"
                   style="@style/InfoLabel"/>
         <TextView android:layout_width="0px" android:layout_height="wrap_content"
                   android:layout_weight="3"
                   android:paddingLeft="10dp"
-                  android:id="@+id/host"
-                android:text="程成"/>
+                  android:id="@+id/host"/>
     </LinearLayout>
     <View android:layout_width="280dp"
           android:layout_height="2dp"
           android:background="@drawable/dotted_line"/>
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                   android:paddingTop="10dp">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
         <TextView android:layout_width="180dp" android:layout_height="wrap_content"
                   android:gravity="right"
                   android:text="参会人员:"
                   android:drawableLeft="@drawable/list_attend"
                   style="@style/InfoLabel"
                   />
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="10dp"
+                android:layout_gravity="right">
+                <TextView
+                    android:id="@+id/refresh"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="20dp"
+                    android:paddingRight="20dp"
+                    android:text="刷新"
+                    style="@style/BlackButtonStyle"/>
+                <ProgressBar
+                    android:id="@+id/refresh_bar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:indeterminate="true"
+                    android:visibility="invisible"
+                    style="?android:attr/progressBarStyleSmall"/>
+            </FrameLayout>
+        </LinearLayout>
         <LinearLayout
             android:layout_width="0px"
             android:layout_weight="3"
@@ -96,6 +120,7 @@
                 <TextView android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
                     android:id="@+id/signed_list"/>
             </LinearLayout>
             <LinearLayout
@@ -108,7 +133,7 @@
                     android:drawablePadding="10dp"
                     android:drawableRight="@drawable/list_absent"
                     android:text="未登录"/>
-                <TextView android:layout_width="wrap_content"
+                <!--TextView android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingLeft="10dp"
                     android:textColor="@color/gray"
@@ -122,11 +147,11 @@
                     android:layout_height="wrap_content"
                     android:paddingLeft="10dp"
                     android:textColor="@color/gray"
-                    android:text="邵逸夫"/>
+                    android:text="邵逸夫"/-->
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-    <View android:layout_width="280dp"
+    <!--View android:layout_width="280dp"
           android:layout_height="2dp"
           android:background="@drawable/dotted_line"/>
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -141,7 +166,7 @@
             android:layout_weight="3"
             android:paddingLeft="10dp"
             android:text="白芸馨 林至斌"/>
-    </LinearLayout>
+    </LinearLayout-->
     <View android:layout_width="280dp"
           android:layout_height="2dp"
           android:background="@drawable/dotted_line"/>

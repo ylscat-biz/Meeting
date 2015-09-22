@@ -55,4 +55,30 @@ public class HttpHelper {
             }
         });
     }
+
+    public static String get(String url) {
+        try {
+            URL u = new URL(url);
+            HttpURLConnection con = (HttpURLConnection)u.openConnection();
+            con.setRequestMethod("GET");
+            con.setConnectTimeout(2000);
+            con.setReadTimeout(2000);
+            con.setUseCaches(false);
+            con.setDoInput(true);
+
+            InputStream is = con.getInputStream();
+            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+            StringBuilder sb = new StringBuilder();
+            for(String line = br.readLine(); line != null; line = br.readLine())
+                sb.append(line).append('\n');
+            con.disconnect();
+            if(sb.length() > 0)
+                return sb.substring(0, sb.length() - 1);
+        }
+        catch (IOException e) {
+            Log.d("Net", e.getMessage(), e);
+        }
+
+        return null;
+    }
 }

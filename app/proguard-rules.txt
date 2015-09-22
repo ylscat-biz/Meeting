@@ -1,0 +1,17 @@
+-dontobfuscate
+-dontwarn org.apache.**
+-dontwarn org.openxmlformats.**
+-dontwarn org.w3.**
+-dontwarn org.junit.**
+-dontwarn org.etsi.**
+-dontwarn com.microsoft.**
+-dontwarn schemasMicrosoft*.**
+
+-keep class org.apache.poi.hssf.** {*;}
+-keep class org.apache.poi.xssf.** {*;}
+-keep class org.apache.poi.openxml4j.** {*;}
+-keep class org.openxmlformats.schemas.spreadsheetml.** {*;}
+-keep class org.apache.xmlbeans.** {*;}
+-keep class javax.xml.stream.** {*;}
+
+#-keep class org.openxmlformats.schemas.** {*;}

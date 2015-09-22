@@ -4,33 +4,28 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Response;
+import com.android.volley.VolleyError;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 
+import arbell.demo.meeting.doc.DocPanel;
 import arbell.demo.meeting.network.HttpHelper;
 import arbell.demo.meeting.network.Request;
 import arbell.demo.meeting.vote.DialogController;
 import arbell.demo.meeting.vote.Vote;
 import arbell.demo.meeting.vote.VoteAdapter;
 import arbell.demo.meeting.vote.VoteController;
+import arbell.demo.meeting.vote.VoteManager;
 
 public class Meeting extends Activity implements View.OnClickListener,
         AdapterView.OnItemClickListener,
@@ -40,17 +35,13 @@ public class Meeting extends Activity implements View.OnClickListener,
     public static final String ADDRESS = "address";
     public static final String HOST = "host";
     public static final String TIME = "time";
+    public static final String TOPIC = "topic";
 
     private View mSelected;
     private HashMap<View, View> mTabMap = new HashMap<>();
-    private View mSelectedTopic;
-    private HashMap<View, ListAdapter> mTopicMap = new HashMap<>();
-    public static VoteAdapter sVoteAdapter;
+    private VoteAdapter mVoteAdapter;
 
-    int[] icons = {R.drawable.doc_word, /*R.drawable.doc_excel,*/
-            R.drawable.doc_ppt, R.drawable.doc_pdf,
-            R.drawable.doc_pic, /*R.drawable.doc_video*/};
-    private Update mUpdateSignedList;
+    public static String sMeetingID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +49,7 @@ public class Meeting extends Activity implements View.OnClickListener,
         signIn();
 
         setContentView(R.layout.meeting);
-        mUpdateSignedList = new Update(getIntent().getStringExtra(ID));
+        sMeetingID = getIntent().getStringExtra(ID);
         String title = getIntent().getStringExtra(TITLE);
         TextView tv = (TextView)findViewById(R.id.title);
         tv.setText(title);
@@ -76,6 +67,7 @@ public class Meeting extends Activity implements View.OnClickListener,
         panel = findViewById(R.id.doc_panel);
         panel.setVisibility(View.GONE);
         mTabMap.put(tab, panel);
+        new DocPanel(this, panel);
 
         tab = findViewById(R.id.vote);
         tab.setOnClickListener(this);
@@ -98,12 +90,10 @@ public class Meeting extends Activity implements View.OnClickListener,
             }
         });
 
-        setupDocs();
-
-        if(sVoteAdapter == null) {
-            sVoteAdapter = new VoteAdapter(getLayoutInflater());
-            createDefaultVotes();
+        if(VoteManager.sInstance == null) {
+            VoteManager.sInstance = new VoteManager(getLayoutInflater());
         }
+        mVoteAdapter = new VoteAdapter(getLayoutInflater());
         findViewById(R.id.create).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -119,21 +109,14 @@ public class Meeting extends Activity implements View.OnClickListener,
             }
         });
         ListView lv = (ListView)findViewById(R.id.vote_list);
-        lv.setAdapter(sVoteAdapter);
+        lv.setAdapter(mVoteAdapter);
         lv.setOnItemClickListener(this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if(mSelected != null && mSelected.getId() == R.id.info)
-            mUpdateSignedList.start();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        mUpdateSignedList.stop();
+        VoteManager.sInstance.getVotes(mVoteAdapter, null, null);
     }
 
     private void setupInfo(View panel) {
@@ -146,6 +129,14 @@ public class Meeting extends Activity implements View.OnClickListener,
         tv.setText(intent.getStringExtra(ADDRESS));
         tv = (TextView)panel.findViewById(R.id.host);
         tv.setText(intent.getStringExtra(HOST));
+        tv = (TextView)panel.findViewById(R.id.topic);
+        tv.setText(intent.getStringExtra(TOPIC));
+        View button = panel.findViewById(R.id.refresh);
+        View progress = panel.findViewById(R.id.refresh_bar);
+        tv = (TextView)panel.findViewById(R.id.signed_list);
+        Refresh refresh = new Refresh(button, progress, tv);
+        button.setOnClickListener(refresh);
+        refresh.onClick(button);
     }
 
     private void signIn() {
@@ -159,7 +150,7 @@ public class Meeting extends Activity implements View.OnClickListener,
                     public void onResponse(JSONObject response) {
                         if(!response.optBoolean("success"))
                             Toast.makeText(Meeting.this,
-                                    R.string.sign_in_fail,
+                                    response.optString("msg"),
                                     Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -176,266 +167,73 @@ public class Meeting extends Activity implements View.OnClickListener,
             v.setSelected(true);
             mTabMap.get(v).setVisibility(View.VISIBLE);
             mSelected = v;
-            if(v.getId() == R.id.info)
-                mUpdateSignedList.start();
-            else if(mUpdateSignedList.running)
-                mUpdateSignedList.stop();
         }
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Vote vote = (Vote)parent.getAdapter().getItem(position);
+        JSONObject vote = (JSONObject)parent.getAdapter().getItem(position);
         Dialog dialog = new Dialog(Meeting.this, android.R.style.Theme_DeviceDefault_Light_Dialog_NoActionBar);
         dialog.setContentView(R.layout.vote);
         dialog.setCanceledOnTouchOutside(false);
         dialog.show();
-        new VoteController(dialog, vote);
-    }
-
-    private void setupDocs() {
-        View.OnClickListener listener = new View.OnClickListener() {
+        new VoteController(dialog, vote) {
             @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Meeting.this, DocViewer.class);
-                Integer tag = (Integer)v.getTag();
-                switch (tag) {
-                    case R.drawable.doc_word:
-                        intent.putExtra(DocViewer.FILE, "word");
-                        break;
-                    case R.drawable.doc_ppt:
-                        intent.putExtra(DocViewer.FILE, "ppt");
-                        break;
-                    case R.drawable.doc_pdf:
-                        intent.putExtra(DocViewer.FILE, "pdf");
-                        break;
-                    case R.drawable.doc_pic:
-                        intent.putExtra(DocViewer.FILE, "jpg");
-                        break;
-                }
-                startActivity(intent);
+            public void onVote() {
+                VoteManager.sInstance.getVotes(mVoteAdapter, null, null);
             }
         };
-
-        LayoutInflater inflater = getLayoutInflater();
-        LinearLayout ll = (LinearLayout)findViewById(R.id.public_docs);
-
-        for(int i = 0; i < 12; i ++) {
-            int index = (int)(Math.random()*icons.length);
-            ViewGroup doc = addDoc(ll, inflater,
-                    icons[index], "公共资料" + (i + 1));
-            doc.setOnClickListener(listener);
-            doc.setTag(icons[index]);
-        }
-        final ListView topicContent = (ListView)findViewById(R.id.topic_content);
-        View.OnClickListener topicControl = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(v != mSelectedTopic) {
-                    if(mSelectedTopic != null) {
-                        mSelectedTopic.setSelected(false);
-                        topicContent.setAdapter(mTopicMap.get(mSelectedTopic));
-                    }
-                    v.setSelected(true);
-                    topicContent.setAdapter(mTopicMap.get(v));
-                    mSelectedTopic = v;
-                }
-            }
-        };
-
-        ll = (LinearLayout)findViewById(R.id.meeting_topic);
-        for(int i = 0; i < 4; i++) {
-            TextView tv = (TextView)inflater.inflate(R.layout.topic_button, ll, false);
-            tv.setText("议题" + (i + 1));
-            ll.addView(tv);
-            TopicAdapter adapter = new TopicAdapter();
-            setupAdapter(adapter);
-            mTopicMap.put(tv, adapter);
-            tv.setOnClickListener(topicControl);
-        }
-        topicControl.onClick(ll.getChildAt(0));
-    }
-
-    private ViewGroup addDoc(ViewGroup container, LayoutInflater inflater,
-                        int icon, String text) {
-        ViewGroup doc = (ViewGroup)inflater.inflate(R.layout.doc_item, container, false);
-        ImageView iv = (ImageView)doc.getChildAt(0);
-        iv.setImageResource(icon);
-        TextView tv = (TextView)doc.getChildAt(1);
-        tv.setText(text);
-        tv.setSelected(true);
-        container.addView(doc);
-        return doc;
-    }
-
-    private void setupAdapter(TopicAdapter adapter) {
-        int subjectCount = (int)(Math.random()*5) + 1;
-        for(int i = 0; i < subjectCount; i++) {
-            Subject subject = new Subject();
-            subject.title = "讨论问题" + (i + 1);
-            int docCount = (int)(Math.random()*2) + 2;
-            for(int j = 1; j <= docCount; j++) {
-                int index = (int)(Math.random()*icons.length);
-                subject.mDocs.put("文档" + j, icons[index]);
-            }
-            adapter.mSubjects.add(subject);
-        }
-    }
-
-    private void createDefaultVotes() {
-        Vote vote = new Vote();
-        vote.title = "评选新秀";
-        vote.options.add("罗熙杰");
-        vote.options.add("侯磊");
-        vote.options.add("何大为");
-        vote.multiple = false;
-        sVoteAdapter.mVotes.add(vote);
-
-        vote = new Vote();
-        vote.title = "添置物品";
-        vote.options.add("零食");
-        vote.options.add("文具");
-        vote.options.add("药品");
-        vote.multiple = true;
-        sVoteAdapter.mVotes.add(vote);
     }
 
     @Override
-    public void onVoteCreate(Vote vote) {
-        sVoteAdapter.mVotes.add(vote);
-        sVoteAdapter.notifyDataSetChanged();
+    public void onVoteCreate() {
+        VoteManager.sInstance.getVotes(mVoteAdapter, null, null);
     }
 
-    class TopicAdapter extends BaseAdapter implements View.OnClickListener {
-        private ArrayList<Subject> mSubjects = new ArrayList<>();
+    class Refresh implements View.OnClickListener ,
+            Response.Listener<JSONObject>, Response.ErrorListener {
+        private View mButton, mProgress;
+        private TextView mList;
+        private Request mRequest;
 
-        @Override
-        public int getCount() {
-            return mSubjects.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return mSubjects.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            LayoutInflater inflater = getLayoutInflater();
-            if(convertView == null) {
-                convertView = inflater.inflate(R.layout.subject_item, parent, false);
-            }
-            Subject subject = mSubjects.get(position);
-            LinkedHashMap<String, Integer> docs = subject.mDocs;
-            TextView tv = (TextView)convertView.findViewById(R.id.subject);
-            tv.setText(subject.title);
-            LinearLayout ll = (LinearLayout)convertView.findViewById(R.id.docs);
-            int i = 0;
-            for(String name : docs.keySet()) {
-                int icon = docs.get(name);
-                ViewGroup doc;
-                if(i < ll.getChildCount()) {
-                    doc = (ViewGroup)ll.getChildAt(i);
-                    if(doc.getVisibility() != View.VISIBLE)
-                        doc.setVisibility(View.VISIBLE);
-                    ImageView iv = (ImageView)doc.getChildAt(0);
-                    iv.setImageResource(icon);
-                    tv = (TextView)doc.getChildAt(1);
-                    tv.setText(name);
-                } else {
-                    doc = addDoc(ll, inflater, icon, name);
-                    doc.setOnClickListener(this);
-                }
-                doc.setTag(icon);
-                i++;
-            }
-
-            if(ll.getChildCount() > i) {
-                for(; i < ll.getChildCount(); i++) {
-                    ll.getChildAt(i).setVisibility(View.GONE);
-                }
-            }
-
-            return convertView;
+        public Refresh(View button, View progress, TextView list) {
+            mButton = button;
+            mProgress = progress;
+            mList = list;
+            mRequest = new Request(Request.Method.GET,
+                    HttpHelper.URL_BASE + "getSignMember?id=" + sMeetingID,
+                    null, this, this);
         }
 
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(Meeting.this, DocViewer.class);
-            Integer tag = (Integer)v.getTag();
-            switch (tag) {
-                case R.drawable.doc_word:
-                    intent.putExtra(DocViewer.FILE, "word");
-                    break;
-                case R.drawable.doc_ppt:
-                    intent.putExtra(DocViewer.FILE, "ppt");
-                    break;
-                case R.drawable.doc_pdf:
-                    intent.putExtra(DocViewer.FILE, "pdf");
-                    break;
-                case R.drawable.doc_pic:
-                    intent.putExtra(DocViewer.FILE, "jpg");
-                    break;
-            }
-            startActivity(intent);
-        }
-    }
-
-    class Subject {
-        public String title;
-        public LinkedHashMap<String, Integer> mDocs = new LinkedHashMap<>();
-    }
-
-    class Update implements Runnable, Response.Listener<JSONObject> {
-        private final int INTERVAL = 3000;
-        private Request mRequest;
-        private TextView mSigned;
-        private boolean running;
-        private JSONArray mList;
-
-        public Update(String meetingId) {
-            mRequest = new Request(Request.Method.GET,
-                    HttpHelper.URL_BASE + "getSignMember?id=" + meetingId,
-                    null,
-                    this);
-            View panel = findViewById(R.id.info_panel);
-            mSigned = (TextView)panel.findViewById(R.id.signed_list);
-        }
-
-        @Override
-        public void run() {
+            mButton.setVisibility(View.INVISIBLE);
+            mProgress.setVisibility(View.VISIBLE);
             HttpHelper.sRequestQueue.add(mRequest);
-            HttpHelper.sHandler.postDelayed(this, INTERVAL);
         }
 
         @Override
         public void onResponse(JSONObject response) {
             JSONArray list = response.optJSONArray("data");
-            int previous = mList == null ? 0 : mList.length();
-            if(previous < list.length()) {
-                StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
+            if(list != null && list.length() > 0) {
                 for(int i = 0; i < list.length(); i++) {
-                    sb.append(list.optString(i));
+                    String member = list.optJSONObject(i).optString("id");
+                    sb.append(member);
                     sb.append(' ');
                 }
-                mSigned.setText(sb.toString());
             }
-            mList = list;
+
+            mList.setText(sb.toString());
+            mButton.setVisibility(View.VISIBLE);
+            mProgress.setVisibility(View.INVISIBLE);
         }
 
-        public void start() {
-            running = true;
-            run();
-        }
-
-        public void stop() {
-            HttpHelper.sHandler.removeCallbacks(this);
-            running = false;
+        @Override
+        public void onErrorResponse(VolleyError error) {
+            Request.sErrorListener.onErrorResponse(error);
+            mButton.setVisibility(View.VISIBLE);
+            mProgress.setVisibility(View.INVISIBLE);
         }
     }
 }
