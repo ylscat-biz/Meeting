@@ -5,10 +5,10 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
@@ -22,29 +22,40 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.artifex.mupdfdemo.AsyncTask;
 import com.artifex.mupdfdemo.MuPDFCore;
 import com.artifex.mupdfdemo.MuPDFPageAdapter;
 import com.artifex.mupdfdemo.MuPDFPageView;
 import com.artifex.mupdfdemo.MuPDFReaderView;
+import com.artifex.mupdfdemo.PageView;
 
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import java.io.File;
+import java.util.LinkedHashMap;
 
 import arbell.demo.meeting.doc.ExcelReader;
 import arbell.demo.meeting.doc.ExcelTabController;
 import arbell.demo.meeting.doc.GetDocUrl;
+import arbell.demo.meeting.network.HttpHelper;
+import arbell.demo.meeting.network.UploadRequest;
+import arbell.demo.meeting.preach.Preach;
+import arbell.demo.meeting.preach.PreachControllerL2;
 import arbell.demo.meeting.view.ExcelView;
 import arbell.demo.meeting.view.FingerPaintView;
+
+import static arbell.demo.meeting.Meeting.sPreach;
 
 /**
  * Created at 15:30 2015-08-26
  */
 public class DocViewer extends Activity implements View.OnClickListener {
     public static final String FILE = "file";
+    public static final String FILE_ID = "fileId";
     public static final String TOPIC_ID = "topic";
     public static final String SUBJECT_ID = "subject";
+    public static final String TOPIC_INDEX = "topicIndex";
 
     private MuPDFReaderView mSlider;
 
@@ -58,9 +69,11 @@ public class DocViewer extends Activity implements View.OnClickListener {
     private AlphaAnimation mHidingAnim;
     private View mPageBar;
 
-    private String topicId, subjectId;
+    public String topicId, subjectId, fileId, topicIndex = "0";
 
     private VideoView mVideoView;
+
+    public static PreachControllerL2 mPreachController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,9 +82,12 @@ public class DocViewer extends Activity implements View.OnClickListener {
         Intent intent = getIntent();
         topicId = intent.getStringExtra(TOPIC_ID);
         subjectId = intent.getStringExtra(SUBJECT_ID);
+        fileId = intent.getStringExtra(FILE_ID);
         String filePath = intent.getStringExtra(FILE);
+        topicIndex = intent.getStringExtra(TOPIC_INDEX);
 
         setContentView(R.layout.doc_viewer);
+        mPreachController = new PreachControllerL2(this);
         mProgress = findViewById(R.id.progress);
         mSeekBar = (SeekBar)findViewById(R.id.seek);
         mSeekBar.setMax(MAX_RANGE);
@@ -117,6 +133,8 @@ public class DocViewer extends Activity implements View.OnClickListener {
                         mPageText.setText(String.format("%d / %d",
                                 progress * count / (MAX_RANGE + 1) + 1,
                                 count));
+                        if(sPreach.getMode() == Preach.PREACH)
+                            uploadCurrent();
                     }
                 }
             }
@@ -153,15 +171,29 @@ public class DocViewer extends Activity implements View.OnClickListener {
 //    }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        sPreach.setListener(mPreachController);
+        mPreachController.onUpdate(sPreach.getMsg());
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         if(mCore != null) {
             mCore.onDestroy();
         }
+        if(sPreach.getMode() == Preach.PREACH) {
+            String msg = String.format("1%s", topicIndex);
+            sPreach.upload(msg);
+        }
+        mPreachController = null;
     }
 
     @Override
     public void onClick(View v) {
+        if(sPreach.getMode() == Preach.FOLLOW)
+            return;
         switch (v.getId()) {
             case R.id.back:
                 finish();
@@ -173,8 +205,10 @@ public class DocViewer extends Activity implements View.OnClickListener {
                     mSlider.setMode(MuPDFReaderView.Mode.Viewing);
                     tv.setCompoundDrawables(mDrawing, null, null, null);
                     findViewById(R.id.clear).setVisibility(View.INVISIBLE);
-                }
-                else {
+                    PageView pv = (PageView)mSlider.getDisplayedView();
+                    if(pv.getDrawing() != null)
+                        save(pv);
+                } else {
                     tv.setText("保存");
                     mSlider.setMode(MuPDFReaderView.Mode.Drawing);
                     tv.setCompoundDrawables(mSaving, null, null, null);
@@ -195,6 +229,25 @@ public class DocViewer extends Activity implements View.OnClickListener {
                 startActivity(intent);
                 break;
         }
+    }
+
+    private void save(final View view) {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                Bitmap bitmap = Bitmap.createBitmap(
+                        view.getWidth(), view.getHeight(), Bitmap.Config.RGB_565);
+                view.draw(new Canvas(bitmap));
+                LinkedHashMap<String, String> p = new LinkedHashMap<>();
+                p.put("id", Meeting.sMeetingID);
+                p.put("memberid", Login.sMemberID);
+                p.put("membername", Login.sMemberName);
+                UploadRequest req = new UploadRequest(HttpHelper.URL_BASE + "save_record",
+                        p, bitmap);
+                req.upload();
+                return null;
+            }
+        }.execute();
     }
 
     /*private boolean copydoc(final File doc) {
@@ -363,6 +416,26 @@ public class DocViewer extends Activity implements View.OnClickListener {
     private void hideButtons() {
 //        mPageBar.setVisibility(View.GONE);
         mPageBar.startAnimation(mHidingAnim);
+    }
+
+    public void uploadCurrent() {
+        String msg = String.format("1%s,%s", topicIndex, fileId);
+        if(mSlider != null) {
+            msg += ";"+mSlider.getDisplayedViewIndex();
+        }
+        sPreach.upload(msg);
+    }
+
+    public void moveToPage(int page) {
+        if(mSlider == null)
+            return;
+        int index = mSlider.getDisplayedViewIndex();
+        if(page == index - 1)
+            mSlider.moveToPrevious();
+        else if(page == index + 1)
+            mSlider.moveToNext();
+        else
+            mSlider.setDisplayedViewIndex(page);
     }
 
     private void showVoteTopicDialog() {

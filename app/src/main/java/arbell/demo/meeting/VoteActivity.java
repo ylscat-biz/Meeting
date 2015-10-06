@@ -2,6 +2,7 @@ package arbell.demo.meeting;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -10,11 +11,14 @@ import android.widget.ListView;
 
 import org.json.JSONObject;
 
+import arbell.demo.meeting.preach.Preach;
 import arbell.demo.meeting.vote.DialogController;
 import arbell.demo.meeting.vote.Vote;
 import arbell.demo.meeting.vote.VoteAdapter;
 import arbell.demo.meeting.vote.VoteController;
 import arbell.demo.meeting.vote.VoteManager;
+
+import static arbell.demo.meeting.Meeting.sPreach;
 
 /**
  * Created at 04:12 2015-09-07
@@ -62,12 +66,22 @@ public class VoteActivity extends Activity implements
         dialog.setContentView(R.layout.vote);
         dialog.setCanceledOnTouchOutside(false);
         dialog.show();
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                if (sPreach.getMode() == Preach.PREACH)
+                    DocViewer.mPreachController.mDocViewer.uploadCurrent();
+            }
+        });
         new VoteController(dialog, vote) {
             @Override
             public void onVote() {
                 VoteManager.sInstance.getVotes(mAdapter, topicId, subjectId);
             }
         };
+        if(Meeting.sPreach.getMode() == Preach.PREACH) {
+            Meeting.sPreach.upload("1_" + vote.optString("id"));
+        }
     }
 
     @Override

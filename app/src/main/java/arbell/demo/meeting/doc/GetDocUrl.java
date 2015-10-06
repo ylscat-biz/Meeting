@@ -32,6 +32,12 @@ public class GetDocUrl implements Runnable{
                         try {
                             JSONObject json = new JSONObject(resp);
                             JSONObject data = json.optJSONObject("data");
+                            if(data == null) {
+                                Log.w("Meeting", String.format(
+                                        "Can't get url for %s[%s]",
+                                        doc.name, doc.id));
+                                continue;
+                            }
                             String name = doc.url = data.optString("url");
                             String ext = getSuffix(name);
                             if("pdf".equals(ext))

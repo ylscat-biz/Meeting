@@ -29,6 +29,9 @@ import arbell.demo.meeting.Meeting;
 import arbell.demo.meeting.R;
 import arbell.demo.meeting.network.HttpHelper;
 import arbell.demo.meeting.network.Request;
+import arbell.demo.meeting.preach.Preach;
+
+import static arbell.demo.meeting.Meeting.sPreach;
 
 /**
  * 2015-09-21 15:08
@@ -54,15 +57,14 @@ public class DocPanel {
             @Override
             public void onClick(View v) {
                 if(v != mSelectedTopic) {
-                    if(mSelectedTopic != null) {
-                        mSelectedTopic.setSelected(false);
-                        mTopicContent.setAdapter(mTopicMap.get(mSelectedTopic));
+                    int mode = sPreach.getMode();
+                    if(mode == Preach.FOLLOW)
+                        return;
+                    selectTab(v);
+                    if(mode == Preach.PREACH) {
+                        int index = mTabPanel.indexOfChild(v);
+                        sPreach.upload("1" + index);
                     }
-                    v.setSelected(true);
-                    TopicAdapter adapter = mTopicMap.get(v);
-                    mTopicContent.setAdapter(adapter);
-                    mTitle.setText(adapter.mTitle);
-                    mSelectedTopic = v;
                 }
             }
         };
@@ -73,9 +75,15 @@ public class DocPanel {
                     @Override
                     public void onResponse(JSONObject response) {
                         JSONObject data = response.optJSONObject("data");
+                        if(data == null)
+                            return;
                         JSONArray files = null;
                         try {
-                            files = new JSONArray(data.optString("file_json"));
+                            if(data.has("file_json")) {
+                                String str = data.optString("file_json");
+                                if(str.length() > 0)
+                                    files = new JSONArray(str);
+                            }
                         } catch (JSONException e) {
                             Log.e("Meeting", "file_json parse error", e);
                         }
@@ -116,7 +124,11 @@ public class DocPanel {
                             JSONObject json = array.optJSONObject(i);
                             JSONArray files = null;
                             try {
-                                files = new JSONArray(json.optString("file_json"));
+                                if(json.has("file_json")) {
+                                    String str = json.optString("file_json");
+                                    if(str.length() > 0)
+                                        files = new JSONArray(str);
+                                }
                             } catch (JSONException e) {
                                 Log.e("Meeting", "file_json parse error", e);
                             }
@@ -143,7 +155,11 @@ public class DocPanel {
                                     s.id = subject.optString("id");
                                     s.title = subject.optString("title");
                                     try {
-                                        files = new JSONArray(subject.optString("file_json"));
+                                        if(json.has("file_json")) {
+                                            String str = json.optString("file_json");
+                                            if(str.length() > 0)
+                                                files = new JSONArray(str);
+                                        }
                                     } catch (JSONException e) {
                                         Log.e("Meeting", "file_json parse error", e);
                                     }
@@ -168,6 +184,32 @@ public class DocPanel {
                 });
         HttpHelper.sRequestQueue.add(publicDocs);
         HttpHelper.sRequestQueue.add(topics);
+    }
+
+    public void selectTab(int index) {
+        int count = mTabPanel.getChildCount();
+        if(index < count) {
+            selectTab(mTabPanel.getChildAt(index));
+        }
+    }
+
+    public void selectTab(View v) {
+        if(mSelectedTopic != null) {
+            mSelectedTopic.setSelected(false);
+            mTopicContent.setAdapter(mTopicMap.get(mSelectedTopic));
+        }
+        v.setSelected(true);
+        TopicAdapter adapter = mTopicMap.get(v);
+        mTopicContent.setAdapter(adapter);
+        mTitle.setText(adapter.mTitle);
+        mSelectedTopic = v;
+    }
+
+    public int getTabIndex() {
+        if(mSelectedTopic == null)
+            return -1;
+        else
+            return mTabPanel.indexOfChild(mSelectedTopic);
     }
 
     private void addTab(int index, String name, TopicAdapter adapter) {
@@ -259,6 +301,39 @@ public class DocPanel {
         return doc;
     }
 
+    public void openDoc(String id) {
+        TopicAdapter adapter = mTopicMap.get(mSelectedTopic);
+        if(adapter == null)
+            return;
+        for(int i = 0; i < adapter.getCount(); i++) {
+            Subject subject = (Subject)adapter.getItem(i);
+            for(Doc doc : subject.mDocs) {
+                if(doc.id.equals(id)) {
+                    String subjectId = subject.id;
+                    String topicId = adapter.id;
+                    if(doc.file == null) {
+                        String url = doc.url;
+                        int index = url.lastIndexOf('.');
+                        if(index == -1) {
+                            return;
+                        }
+                        String name = doc.id + url.substring(index);
+                        File file = new File(mActivity.getExternalCacheDir(), name);
+                        if(file.exists()) {
+                            doc.file = file;
+                            adapter.openDoc(doc, topicId, subjectId);
+                        }
+                        else {
+                            adapter.downloadFile(file, doc, topicId, subjectId);
+                        }
+                    }
+                    else
+                        adapter.openDoc(doc, topicId, subjectId);
+                    break;
+                }
+            }
+        }
+    }
     /*private void setupAdapter(TopicAdapter adapter) {
         int subjectCount = (int)(Math.random()*5) + 1;
         for(int i = 0; i < subjectCount; i++) {
@@ -339,6 +414,8 @@ public class DocPanel {
             Doc doc = (Doc)v.getTag();
             if(doc == null || doc.id == null || doc.url == null)
                 return;
+            if(sPreach.getMode() == Preach.FOLLOW)
+                return;
 
             TopicAdapter adapter = mTopicMap.get(mSelectedTopic);
             String topicId = adapter.id;
@@ -358,14 +435,20 @@ public class DocPanel {
                 File file = new File(mActivity.getExternalCacheDir(), name);
                 if(file.exists()) {
                     doc.file = file;
-                    openDoc(file, topicId, subjectId);
+                    openDoc(doc, topicId, subjectId);
                 }
                 else {
                     downloadFile(file, doc, topicId, subjectId);
                 }
             }
             else
-                openDoc(doc.file, topicId, subjectId);
+                openDoc(doc, topicId, subjectId);
+            if(sPreach.getMode() == Preach.PREACH) {
+                int index = mTabPanel.indexOfChild(mSelectedTopic);
+                String msg = String.format("1%d,%s", index,
+                        doc.id);
+                sPreach.upload(msg);
+            }
             /*Intent intent = new Intent(mActivity, DocViewer.class);
             Integer tag = (Integer)v.getTag();
             switch (tag) {
@@ -385,13 +468,16 @@ public class DocPanel {
             startActivity(intent);*/
         }
 
-        public void openDoc(File file, String topicId, String subjectId) {
+        public void openDoc(Doc doc, String topicId, String subjectId) {
             Intent intent = new Intent(mActivity, DocViewer.class);
-            intent.putExtra(DocViewer.FILE, file.getPath());
+            intent.putExtra(DocViewer.FILE, doc.file.getPath());
             if(topicId != null)
                 intent.putExtra(DocViewer.TOPIC_ID, topicId);
             if(subjectId != null)
                 intent.putExtra(DocViewer.SUBJECT_ID, subjectId);
+            intent.putExtra(DocViewer.FILE_ID, doc.id);
+            int index = mTabPanel.indexOfChild(mSelectedTopic);
+            intent.putExtra(DocViewer.TOPIC_INDEX, String.valueOf(index));
             mActivity.startActivity(intent);
         }
 
@@ -417,8 +503,8 @@ public class DocPanel {
                 public void complete(File file) {
                     dialog.dismiss();
                     if(file != null) {
-                        openDoc(file, topicId, subjectId);
                         doc.file = file;
+                        openDoc(doc, topicId, subjectId);
                     }
                 }
             });

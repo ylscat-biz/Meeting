@@ -93,7 +93,7 @@ public abstract class PageView extends ViewGroup {
 	private static final int LINK_COLOR = 0x80AC7225;
 	private static final int BOX_COLOR = 0xFF4444FF;
 	private static final int INK_COLOR = 0xFFFF0000;
-	private static final float INK_THICKNESS = 1.0f;
+	private static final float INK_THICKNESS = 2.0f;
 	private static final int BACKGROUND_COLOR = 0xFFFFFFFF;
 	private static final int PROGRESS_DIALOG_DELAY = 200;
 	protected final Context   mContext;
@@ -241,6 +241,11 @@ public abstract class PageView extends ViewGroup {
 
 		// Calculate scaled size that fits within the screen limits
 		// This is the size at minimum zoom
+		if(size.x == 100 && size.y == 100) {
+			size.x = 1191;
+			size.y = 1684;
+		}
+
 		mSourceScale = Math.min(mParentSize.x/size.x, mParentSize.y/size.y);
 		Point newSize = new Point((int)(size.x*mSourceScale), (int)(size.y*mSourceScale));
 		mSize = newSize;
@@ -490,6 +495,14 @@ public abstract class PageView extends ViewGroup {
 		}
 
 		return path;
+	}
+
+	public ArrayList<ArrayList<PointF>> getDrawing() {
+		return mDrawing;
+	}
+
+	public void setDrawing(ArrayList<ArrayList<PointF>> drawing) {
+		mDrawing = drawing;
 	}
 
 	protected void processSelectedText(TextProcessor tp) {

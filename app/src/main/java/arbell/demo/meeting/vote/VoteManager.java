@@ -17,12 +17,10 @@ import arbell.demo.meeting.network.Request;
 public class VoteManager {
     public static VoteManager sInstance;
 
-    private VoteAdapter mAdapter;
     private LayoutInflater mInflater;
 
     public VoteManager(LayoutInflater inflater) {
         mInflater = inflater;
-        mAdapter = new VoteAdapter(inflater);
     }
 
     public VoteAdapter getVotes(VoteAdapter adapter, String topicId, String subjectId) {

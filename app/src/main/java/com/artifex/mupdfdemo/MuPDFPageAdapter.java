@@ -9,11 +9,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
+import java.util.ArrayList;
+
 public class MuPDFPageAdapter extends BaseAdapter {
 	private final Context mContext;
 	private final FilePicker.FilePickerSupport mFilePickerSupport;
 	private final MuPDFCore mCore;
 	private final SparseArray<PointF> mPageSizes = new SparseArray<PointF>();
+	private final SparseArray<ArrayList<ArrayList<PointF>>> mPageDrawings =
+			new SparseArray<ArrayList<ArrayList<PointF>>>();
 	private       Bitmap mSharedHqBm;
 
 	public MuPDFPageAdapter(Context c, FilePicker.FilePickerSupport filePickerSupport, MuPDFCore core) {

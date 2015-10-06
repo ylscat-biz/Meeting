@@ -69,7 +69,7 @@ public class Schedule extends Activity implements View.OnClickListener {
         final Adapter closed = new Adapter();
         Request request = new Request(Request.Method.POST,
                 HttpHelper.URL_BASE + "getMeeting",
-                null,
+                "memberid=" + Login.sMemberID,
                 new Response.Listener<JSONObject>() {
                     private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 

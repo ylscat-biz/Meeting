@@ -11,7 +11,6 @@ import android.widget.TextView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 import arbell.demo.meeting.R;
@@ -99,6 +98,7 @@ public class VoteAdapter extends BaseAdapter {
             }
         }
         voteCount.clear();
+        convertView.setBackgroundColor((position&1) == 0 ? 0 : 0x33000000);
         return convertView;
     }
 }

@@ -116,7 +116,7 @@
                     android:textColor="#090"
                     android:drawablePadding="10dp"
                     android:drawableRight="@drawable/list_attending"
-                    android:text="已登录"/>
+                    android:text="已到会"/>
                 <TextView android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingLeft="10dp"
@@ -132,7 +132,12 @@
                     android:textStyle="bold"
                     android:drawablePadding="10dp"
                     android:drawableRight="@drawable/list_absent"
-                    android:text="未登录"/>
+                    android:text="未到会"/>
+                <TextView android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:id="@+id/absent_list"/>
                 <!--TextView android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingLeft="10dp"
@@ -151,7 +156,7 @@
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-    <!--View android:layout_width="280dp"
+    <View android:layout_width="280dp"
           android:layout_height="2dp"
           android:background="@drawable/dotted_line"/>
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -165,8 +170,8 @@
         <TextView android:layout_width="0px" android:layout_height="wrap_content"
             android:layout_weight="3"
             android:paddingLeft="10dp"
-            android:text="白芸馨 林至斌"/>
-    </LinearLayout-->
+            android:id="@+id/guests"/>
+    </LinearLayout>
     <View android:layout_width="280dp"
           android:layout_height="2dp"
           android:background="@drawable/dotted_line"/>

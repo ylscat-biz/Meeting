@@ -73,6 +73,7 @@ public class VoteController implements View.OnClickListener, AdapterView.OnItemC
         switch (v.getId()) {
             case R.id.back:
                 mDialog.dismiss();
+                onVote();
                 break;
             case R.id.vote:
                 vote();

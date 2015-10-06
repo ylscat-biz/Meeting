@@ -2,8 +2,10 @@ package arbell.demo.meeting;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -16,13 +18,19 @@ import com.android.volley.VolleyError;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 
+import arbell.demo.meeting.annotation.AnnotationAdapter;
 import arbell.demo.meeting.doc.DocPanel;
 import arbell.demo.meeting.network.HttpHelper;
 import arbell.demo.meeting.network.Request;
+import arbell.demo.meeting.preach.Preach;
+import arbell.demo.meeting.preach.PreachControllerL1;
 import arbell.demo.meeting.vote.DialogController;
-import arbell.demo.meeting.vote.Vote;
 import arbell.demo.meeting.vote.VoteAdapter;
 import arbell.demo.meeting.vote.VoteController;
 import arbell.demo.meeting.vote.VoteManager;
@@ -39,9 +47,15 @@ public class Meeting extends Activity implements View.OnClickListener,
 
     private View mSelected;
     private HashMap<View, View> mTabMap = new HashMap<>();
+    private ArrayList<View> mTabs = new ArrayList<>();
     private VoteAdapter mVoteAdapter;
+    private AnnotationAdapter mAnotAdatper;
+
+    public DocPanel mDocPanel;
 
     public static String sMeetingID;
+    public static Preach sPreach;
+    public PreachControllerL1 mPreachController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +64,8 @@ public class Meeting extends Activity implements View.OnClickListener,
 
         setContentView(R.layout.meeting);
         sMeetingID = getIntent().getStringExtra(ID);
+        sPreach = new Preach(sMeetingID);
+        mPreachController = new PreachControllerL1(this);
         String title = getIntent().getStringExtra(TITLE);
         TextView tv = (TextView)findViewById(R.id.title);
         tv.setText(title);
@@ -61,25 +77,32 @@ public class Meeting extends Activity implements View.OnClickListener,
         panel.setVisibility(View.GONE);
         setupInfo(panel);
         mTabMap.put(tab, panel);
+        mTabs.add(tab);
 
         tab = findViewById(R.id.docs);
         tab.setOnClickListener(this);
         panel = findViewById(R.id.doc_panel);
         panel.setVisibility(View.GONE);
         mTabMap.put(tab, panel);
-        new DocPanel(this, panel);
+        mTabs.add(tab);
+        mDocPanel = new DocPanel(this, panel);
 
         tab = findViewById(R.id.vote);
         tab.setOnClickListener(this);
         panel = findViewById(R.id.vote_panel);
         panel.setVisibility(View.GONE);
         mTabMap.put(tab, panel);
+        mTabs.add(tab);
 
         tab = findViewById(R.id.annotation);
         tab.setOnClickListener(this);
         panel = findViewById(R.id.annotation_panel);
         panel.setVisibility(View.GONE);
+        ListView lv = (ListView)panel;
+        mAnotAdatper = new AnnotationAdapter(getLayoutInflater());
+        lv.setAdapter(mAnotAdatper);
         mTabMap.put(tab, panel);
+        mTabs.add(tab);
 
         onClick(first);
 
@@ -97,6 +120,8 @@ public class Meeting extends Activity implements View.OnClickListener,
         findViewById(R.id.create).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(sPreach.getMode() == Preach.FOLLOW)
+                    return;
                 Dialog dialog = new Dialog(Meeting.this);
                 dialog.setContentView(R.layout.create_vote);
 //                dialog.findViewById(R.id.back).setOnClickListener(new DialogController(dialog));
@@ -108,7 +133,7 @@ public class Meeting extends Activity implements View.OnClickListener,
                 new DialogController(dialog, Meeting.this);
             }
         });
-        ListView lv = (ListView)findViewById(R.id.vote_list);
+        lv = (ListView)findViewById(R.id.vote_list);
         lv.setAdapter(mVoteAdapter);
         lv.setOnItemClickListener(this);
     }
@@ -117,6 +142,18 @@ public class Meeting extends Activity implements View.OnClickListener,
     protected void onResume() {
         super.onResume();
         VoteManager.sInstance.getVotes(mVoteAdapter, null, null);
+        sPreach.setListener(mPreachController);
+        mPreachController.onUpdate(sPreach.getMsg());
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if(sPreach.getMode() == Preach.PREACH)
+            sPreach.upload(null);
+        sPreach.stop();
+        sPreach = null;
     }
 
     private void setupInfo(View panel) {
@@ -133,8 +170,11 @@ public class Meeting extends Activity implements View.OnClickListener,
         tv.setText(intent.getStringExtra(TOPIC));
         View button = panel.findViewById(R.id.refresh);
         View progress = panel.findViewById(R.id.refresh_bar);
-        tv = (TextView)panel.findViewById(R.id.signed_list);
-        Refresh refresh = new Refresh(button, progress, tv);
+        TextView signed = (TextView)panel.findViewById(R.id.signed_list);
+        TextView absent = (TextView)panel.findViewById(R.id.absent_list);
+        TextView guest = (TextView)panel.findViewById(R.id.guests);
+        Refresh refresh = new Refresh(button, progress, signed,
+                absent, guest);
         button.setOnClickListener(refresh);
         refresh.onClick(button);
     }
@@ -160,23 +200,71 @@ public class Meeting extends Activity implements View.OnClickListener,
     @Override
     public void onClick(View v) {
         if(v != mSelected) {
-            if(mSelected != null) {
-                mSelected.setSelected(false);
-                mTabMap.get(mSelected).setVisibility(View.GONE);
+            int mode = sPreach.getMode();
+            if(mode == Preach.FOLLOW)
+                return;
+            selectTab(v);
+            if(mode == Preach.PREACH) {
+                uploadCurrent();
             }
-            v.setSelected(true);
-            mTabMap.get(v).setVisibility(View.VISIBLE);
-            mSelected = v;
         }
+    }
+
+    public void selectTab(int index) {
+        View tab = mTabs.get(index);
+        if(tab != null && tab != mSelected)
+            selectTab(tab);
+    }
+
+    private void selectTab(View v) {
+        if(mSelected != null) {
+            mSelected.setSelected(false);
+            mTabMap.get(mSelected).setVisibility(View.GONE);
+        }
+        v.setSelected(true);
+        mTabMap.get(v).setVisibility(View.VISIBLE);
+        mSelected = v;
+        if(v.getId() == R.id.annotation) {
+            mAnotAdatper.refresh();
+        }
+    }
+
+    public void uploadCurrent() {
+        int index = mTabs.indexOf(mSelected);
+        String msg = String.valueOf(index);
+        if(index == 1) {
+            int docTab = mDocPanel.getTabIndex();
+            if(docTab != -1)
+                msg += docTab;
+        }
+        sPreach.upload(msg);
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        if(sPreach.getMode() == Preach.FOLLOW)
+            return;
         JSONObject vote = (JSONObject)parent.getAdapter().getItem(position);
+        popupVote(vote);
+        if(sPreach.getMode() == Preach.PREACH) {
+            sPreach.upload("2" + position);
+        }
+    }
+
+    public void popupVote(JSONObject vote) {
         Dialog dialog = new Dialog(Meeting.this, android.R.style.Theme_DeviceDefault_Light_Dialog_NoActionBar);
         dialog.setContentView(R.layout.vote);
         dialog.setCanceledOnTouchOutside(false);
         dialog.show();
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                if(sPreach.getMode() == Preach.IDLE)
+                    sPreach.setMode(Preach.FOLLOW);
+                else if(sPreach.getMode() == Preach.PREACH)
+                    sPreach.upload("2");
+            }
+        });
         new VoteController(dialog, vote) {
             @Override
             public void onVote() {
@@ -190,19 +278,71 @@ public class Meeting extends Activity implements View.OnClickListener,
         VoteManager.sInstance.getVotes(mVoteAdapter, null, null);
     }
 
+    public JSONObject getVote(int position) {
+        if(position < mVoteAdapter.getCount())
+            return (JSONObject)mVoteAdapter.getItem(position);
+        else {
+            VoteManager.sInstance.getVotes(mVoteAdapter, null, null);
+            return null;
+        }
+    }
+
     class Refresh implements View.OnClickListener ,
             Response.Listener<JSONObject>, Response.ErrorListener {
         private View mButton, mProgress;
-        private TextView mList;
+        private TextView mList, mAbsent, mGuests;
         private Request mRequest;
 
-        public Refresh(View button, View progress, TextView list) {
+        private LinkedHashSet<String> mAbsentMembers = new LinkedHashSet<>();
+
+        public Refresh(View button, View progress, TextView list,
+                       TextView absents, TextView guests) {
             mButton = button;
             mProgress = progress;
             mList = list;
+            mAbsent = absents;
+            mGuests = guests;
             mRequest = new Request(Request.Method.GET,
                     HttpHelper.URL_BASE + "getSignMember?id=" + sMeetingID,
                     null, this, this);
+            Request members = new Request(Request.Method.GET,
+                    HttpHelper.URL_BASE + "getlxmember?meetingid=" + sMeetingID,
+                    null, new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    JSONArray list = response.optJSONArray("data");
+                    if(list == null)
+                        return;
+                    ArrayList<String> guests = new ArrayList<>();
+                    for(int i = 0; i < list.length(); i++) {
+                        JSONObject json = list.optJSONObject(i);
+                        String name = json.optString("name");
+                        boolean isGuest = "yes".equals(json.optString("lx"));
+                        if(isGuest)
+                            guests.add(name);
+                        else
+                            mAbsentMembers.add(name);
+                    }
+                    if(guests.size() == 0) {
+                        mGuests.setText("无");
+                    }
+                    else {
+                        StringBuilder sb = new StringBuilder();
+                        for(String name : guests) {
+                            sb.append(name).append(' ');
+                        }
+                        mGuests.setText(sb.substring(0, sb.length() - 1));
+                    }
+                    String text = mList.getText().toString();
+                    ArrayList<String> signed = new ArrayList<>();
+                    String[] members = text.split(" ");
+                    if(members.length > 0) {
+                        Collections.addAll(signed, members);
+                    }
+                    refreshList(signed);
+                }
+            });
+            HttpHelper.sRequestQueue.add(members);
         }
 
         @Override
@@ -215,16 +355,15 @@ public class Meeting extends Activity implements View.OnClickListener,
         @Override
         public void onResponse(JSONObject response) {
             JSONArray list = response.optJSONArray("data");
-            StringBuilder sb = new StringBuilder();
+            ArrayList<String> signed = new ArrayList<>();
             if(list != null && list.length() > 0) {
                 for(int i = 0; i < list.length(); i++) {
                     String member = list.optJSONObject(i).optString("id");
-                    sb.append(member);
-                    sb.append(' ');
+                    signed.add(member);
                 }
             }
 
-            mList.setText(sb.toString());
+            refreshList(signed);
             mButton.setVisibility(View.VISIBLE);
             mProgress.setVisibility(View.INVISIBLE);
         }
@@ -234,6 +373,32 @@ public class Meeting extends Activity implements View.OnClickListener,
             Request.sErrorListener.onErrorResponse(error);
             mButton.setVisibility(View.VISIBLE);
             mProgress.setVisibility(View.INVISIBLE);
+        }
+
+        private void refreshList(ArrayList<String> signed) {
+            StringBuilder sb = new StringBuilder();
+            for(String name : signed) {
+                sb.append(name);
+                sb.append(' ');
+                if(mAbsentMembers.contains(name))
+                    mAbsentMembers.remove(name);
+            }
+            int len = sb.length();
+            if(len > 0)
+                mList.setText(sb.substring(0, len - 1));
+            else
+                mList.setText(null);
+
+            sb = new StringBuilder();
+            for(String name : mAbsentMembers) {
+                sb.append(name);
+                sb.append(' ');
+            }
+            len = sb.length();
+            if(len > 0)
+                mAbsent.setText(sb.substring(0, len - 1));
+            else
+                mAbsent.setText(null);
         }
     }
 }

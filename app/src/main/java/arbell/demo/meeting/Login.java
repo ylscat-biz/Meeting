@@ -18,6 +18,7 @@ import arbell.demo.meeting.network.Request;
 
 public class Login extends Activity implements View.OnClickListener {
     public static String sMemberID;
+    public static String sMemberName;
     /**
      * Called when the activity is first created.
      */
@@ -74,6 +75,7 @@ public class Login extends Activity implements View.OnClickListener {
                         JSONObject data = response.optJSONObject("data");
                         if(data != null) {
                             sMemberID = data.optString("id");
+                            sMemberName = data.optString("name");
                         }
                         Intent intent = new Intent(Login.this, Schedule.class);
                         startActivity(intent);
