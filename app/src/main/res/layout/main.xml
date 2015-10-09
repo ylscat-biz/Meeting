@@ -7,15 +7,6 @@
         >
     <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
             android:layout_gravity="center">
-        <View android:layout_width="0px"
-                      android:layout_height="match_parent"
-                      android:layout_weight="1"
-
-                   android:paddingTop="100dp"
-                    android:paddingBottom="100dp"
-                    android:paddingLeft="150dp"
-                    >
-        </View>
         <LinearLayout android:layout_width="0px"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -25,11 +16,11 @@
                 android:padding="50dp"
                 android:background="@drawable/login_right">
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                      android:textColor="@android:color/white"
-                      android:textSize="30sp"
-                      android:layout_gravity="right"
-                    android:text="登录 Login"
-                    android:textAppearance="?android:attr/textAppearanceLarge"/>
+                android:textColor="@android:color/black"
+                android:textSize="35sp"
+                android:layout_gravity="center"
+                android:text="昆明市地方税务局
+                会议决策系统" />
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -37,6 +28,12 @@
                 android:scaleType="fitXY"
                 android:paddingTop="20dp"
                 android:paddingBottom="20dp"/>
+            <!--TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                      android:textColor="@android:color/black"
+                      android:textSize="30sp"
+                      android:layout_gravity="center"
+                    android:text="登录 Login"
+                    android:textAppearance="?android:attr/textAppearanceLarge"/-->
 
             <EditText android:id="@+id/name"
                 android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -52,10 +49,20 @@
                     android:imeActionLabel="登录"
                     android:imeActionId="@+id/enter"
                     android:imeOptions="actionGo"/>
-            <ImageView android:layout_width="match_parent" android:layout_height="wrap_content"
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
                     android:id="@+id/ok"
-                    android:src="@drawable/login_button"/>
+                    android:text="登录"
+                    style="@style/BlackButtonStyle"/>
         </LinearLayout>
+        <View android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:paddingTop="100dp"
+            android:paddingBottom="100dp"
+            android:paddingLeft="150dp">
+        </View>
     </LinearLayout>
 </FrameLayout>
 
