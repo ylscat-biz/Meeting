@@ -24,14 +24,14 @@ public class Preach implements Runnable {
     public static final int PREACH = 3;
     private int mMode = -1;
 
-    private static final int SHORT_INTERVAL = 1500;
-    private static final int LONG_INTERVAL = 3000;
+    private static final int SHORT_INTERVAL = 2000;
+    private static final int LONG_INTERVAL = 5000;
 
     public Preach(String meetingId) {
-        mSetPrefix = HttpHelper.URL_BASE + "setCache?meetingid=" + meetingId;
-        mMonitor = new Request(Request.Method.GET,
-                HttpHelper.URL_BASE + "getCache?meetingid=" + meetingId,
-                null,
+        mSetPrefix = "meetingid=" + meetingId;
+        mMonitor = new Request(Request.Method.POST,
+                HttpHelper.URL_BASE + "getCache",
+                mSetPrefix,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -80,13 +80,13 @@ public class Preach implements Runnable {
     }
 
     public void upload(String msg) {
-        String url = mSetPrefix;
+        String set = mSetPrefix;
         if(msg != null) {
-            url += "&msg=" + msg;
+            set += "&msg=" + msg;
         }
         Request upload = new Request(Request.Method.GET,
-                url,
-                null,
+                HttpHelper.URL_BASE + "setCache",
+                set,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {

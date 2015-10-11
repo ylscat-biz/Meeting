@@ -16,6 +16,7 @@ public class Application extends android.app.Application {
     public void onCreate() {
         super.onCreate();
 
+        HttpHelper.setServer(HttpHelper.getServer(this));
         HttpHelper.sRequestQueue = Volley.newRequestQueue(this);
         sContext = this;
     }

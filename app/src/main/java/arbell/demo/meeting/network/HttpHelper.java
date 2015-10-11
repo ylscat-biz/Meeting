@@ -1,6 +1,8 @@
 package arbell.demo.meeting.network;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.util.Log;
 
@@ -21,7 +23,10 @@ public class HttpHelper {
     public static RequestQueue sRequestQueue;
     public static Handler sHandler = new Handler();
 
-    public static final String URL_BASE = "http://222.221.6.114:8066/app/";
+    public static final String SETTINGS = "settings";
+    public static final String SERVER = "server";
+    public static final String DEFAULT_SERVER = "http://222.221.6.114:8066";
+    public static String URL_BASE = "http://222.221.6.114:8066/app/";
 
     public static void test(Activity activity) {
         Volley.newRequestQueue(activity, new HurlStack());
@@ -80,5 +85,30 @@ public class HttpHelper {
         }
 
         return null;
+    }
+
+    public static String getServer(Context context) {
+        SharedPreferences sp = context.getSharedPreferences(SETTINGS, Context.MODE_PRIVATE);
+        return sp.getString(SERVER, DEFAULT_SERVER);
+    }
+
+    public static void setServer(Context context, String server) {
+        SharedPreferences sp = context.getSharedPreferences(SETTINGS, Context.MODE_PRIVATE);
+        String old = sp.getString(SERVER, DEFAULT_SERVER);
+        if(old.equals(server)) {
+            return;
+        }
+
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putString(SERVER, server);
+        editor.commit();
+        setServer(server);
+    }
+
+    public static void setServer(String server) {
+        if(!server.startsWith("http")) {
+            server = "http://" + server;
+        }
+        URL_BASE = server + "/app/";
     }
 }

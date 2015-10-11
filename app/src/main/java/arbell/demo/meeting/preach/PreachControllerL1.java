@@ -17,6 +17,7 @@ public class PreachControllerL1 implements View.OnClickListener, Preach.PreachLi
     private Meeting mMeeting;
     private TextView mPreachButton;
     private Preach mPreach;
+    private String mLastVoteMsg;
 
     public PreachControllerL1(Meeting meeting) {
         mMeeting = meeting;
@@ -85,6 +86,9 @@ public class PreachControllerL1 implements View.OnClickListener, Preach.PreachLi
                     mMeeting.selectTab(index);
                     if(msgLen > 1) {
                         if (index == 2) {
+                            if(msg.equals(mLastVoteMsg))
+                                break;
+                            mLastVoteMsg = msg;
                             try {
                                 String voteString = msg.substring(1);
                                 int votePos = Integer.parseInt(voteString);

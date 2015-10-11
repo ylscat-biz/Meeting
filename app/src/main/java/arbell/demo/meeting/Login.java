@@ -1,6 +1,7 @@
 package arbell.demo.meeting;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.KeyEvent;
@@ -36,11 +37,20 @@ public class Login extends Activity implements View.OnClickListener {
                 return true;
             }
         });
+
+        findViewById(R.id.settings).setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
-        login();
+        switch (v.getId()) {
+            case R.id.ok:
+                login();
+                break;
+            case R.id.settings:
+                showSettingsDialog();
+                break;
+        }
     }
 
     private void login() {
@@ -83,5 +93,33 @@ public class Login extends Activity implements View.OnClickListener {
                     }
                 });
         HttpHelper.sRequestQueue.add(request);
+    }
+
+    private void showSettingsDialog(){
+        final Dialog dialog = new Dialog(this, android.R.style.
+                Theme_DeviceDefault_Light_Dialog_NoActionBar);
+        dialog.setContentView(R.layout.settings);
+        final EditText editText = (EditText)dialog.findViewById(R.id.input);
+        editText.setText(HttpHelper.getServer(this));
+        dialog.findViewById(R.id.ok).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String s = editText.getText().toString().trim();
+                if (s.length() == 0) {
+                    Toast.makeText(Login.this, "服务器地址不能为空", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                HttpHelper.setServer(Login.this, s);
+                dialog.dismiss();
+            }
+        });
+        dialog.findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
     }
 }

@@ -24,6 +24,7 @@ public class PreachControllerL2 implements View.OnClickListener, Preach.PreachLi
     public DocViewer mDocViewer;
     private TextView mPreachButton;
     private Preach mPreach;
+    private String mLastVoteMsg;
 
     public PreachControllerL2(DocViewer docViewer) {
         mDocViewer = docViewer;
@@ -131,6 +132,9 @@ public class PreachControllerL2 implements View.OnClickListener, Preach.PreachLi
     }
 
     private void popupVote(final String id) {
+        if(mPreach.getMsg().equals(mLastVoteMsg))
+            return;
+        mLastVoteMsg = mPreach.getMsg();
         String url = HttpHelper.URL_BASE + "getVoteList?meetingid=" + Meeting.sMeetingID;
         Request request = new Request(Request.Method.GET, url,
                 null, new Response.Listener<JSONObject>() {

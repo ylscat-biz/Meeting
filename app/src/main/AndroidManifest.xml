@@ -10,7 +10,8 @@
     <application android:label="@string/app_name"
                  android:icon="@drawable/ic_launcher"
                  android:theme="@style/AppTheme"
-                 android:name=".Application">
+                 android:name=".Application"
+                 android:largeHeap="true">
         <activity android:name=".Login"
                   android:label="@string/app_name"
                 android:screenOrientation="landscape"
@@ -23,7 +24,8 @@
         <activity android:name=".Schedule" android:screenOrientation="landscape"/>
         <activity android:name=".Meeting" android:screenOrientation="landscape"
                 android:windowSoftInputMode="stateHidden|adjustPan"/>
-        <activity android:name=".DocViewer" android:screenOrientation="landscape"/>
+        <activity android:name=".DocViewer" android:screenOrientation="sensor"
+            android:configChanges="orientation"/>
         <activity android:name=".VoteActivity" android:screenOrientation="landscape"/>
     </application>
 </manifest>

@@ -21,13 +21,7 @@
                 android:layout_gravity="center"
                 android:text="昆明市地方税务局
                 会议决策系统" />
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:src="@drawable/login_line"
-                android:scaleType="fitXY"
-                android:paddingTop="20dp"
-                android:paddingBottom="20dp"/>
+
             <!--TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                       android:textColor="@android:color/black"
                       android:textSize="30sp"
@@ -36,8 +30,8 @@
                     android:textAppearance="?android:attr/textAppearanceLarge"/-->
 
             <EditText android:id="@+id/name"
-                android:layout_width="match_parent" android:layout_height="wrap_content"
-                      android:layout_marginTop="20dp"
+                   android:layout_width="match_parent" android:layout_height="wrap_content"
+                      android:layout_marginTop="40dp"
                       android:layout_marginBottom="20dp"
                     android:hint="用户名"
                     android:inputType="text"/>
@@ -55,14 +49,23 @@
                     android:id="@+id/ok"
                     android:text="登录"
                     style="@style/BlackButtonStyle"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:paddingLeft="15dp"
+                android:paddingRight="15dp"
+                android:id="@+id/settings"
+                android:text="设置"
+                style="@style/BlackButtonStyle"/>
         </LinearLayout>
-        <View android:layout_width="0px"
+        <FrameLayout android:layout_width="0px"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:paddingTop="100dp"
-            android:paddingBottom="100dp"
-            android:paddingLeft="150dp">
-        </View>
+            >
+        </FrameLayout>
     </LinearLayout>
 </FrameLayout>
 
