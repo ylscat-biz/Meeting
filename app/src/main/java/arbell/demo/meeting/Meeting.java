@@ -4,8 +4,8 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Base64;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -15,13 +15,13 @@ import android.widget.Toast;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
+import org.apmem.tools.layouts.FlowLayout;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 
 import arbell.demo.meeting.annotation.AnnotationAdapter;
@@ -170,11 +170,9 @@ public class Meeting extends Activity implements View.OnClickListener,
         tv.setText(intent.getStringExtra(TOPIC));
         View button = panel.findViewById(R.id.refresh);
         View progress = panel.findViewById(R.id.refresh_bar);
-        TextView signed = (TextView)panel.findViewById(R.id.signed_list);
-        TextView absent = (TextView)panel.findViewById(R.id.absent_list);
+        FlowLayout layout = (FlowLayout)panel.findViewById(R.id.attendant);
         TextView guest = (TextView)panel.findViewById(R.id.guests);
-        Refresh refresh = new Refresh(button, progress, signed,
-                absent, guest);
+        Refresh refresh = new Refresh(button, progress, layout, guest);
         button.setOnClickListener(refresh);
         refresh.onClick(button);
     }
@@ -290,17 +288,17 @@ public class Meeting extends Activity implements View.OnClickListener,
     class Refresh implements View.OnClickListener ,
             Response.Listener<JSONObject>, Response.ErrorListener {
         private View mButton, mProgress;
-        private TextView mList, mAbsent, mGuests;
+        private FlowLayout mList;
+        private TextView mGuests;
         private Request mRequest;
 
-        private LinkedHashSet<String> mAbsentMembers = new LinkedHashSet<>();
+        private LinkedHashMap<String, TextView> mMembers = new LinkedHashMap<>();
+        private LinkedHashSet<String> mSigned = new LinkedHashSet<>();
 
-        public Refresh(View button, View progress, TextView list,
-                       TextView absents, TextView guests) {
+        public Refresh(View button, View progress, FlowLayout list, TextView guests) {
             mButton = button;
             mProgress = progress;
             mList = list;
-            mAbsent = absents;
             mGuests = guests;
             mRequest = new Request(Request.Method.GET,
                     HttpHelper.URL_BASE + "getSignMember?id=" + sMeetingID,
@@ -313,6 +311,7 @@ public class Meeting extends Activity implements View.OnClickListener,
                     JSONArray list = response.optJSONArray("data");
                     if(list == null)
                         return;
+
                     ArrayList<String> guests = new ArrayList<>();
                     for(int i = 0; i < list.length(); i++) {
                         JSONObject json = list.optJSONObject(i);
@@ -320,8 +319,16 @@ public class Meeting extends Activity implements View.OnClickListener,
                         boolean isGuest = "yes".equals(json.optString("lx"));
                         if(isGuest)
                             guests.add(name);
-                        else
-                            mAbsentMembers.add(name);
+                        else {
+                            TextView tv = new TextView(Meeting.this);
+                            tv.setTextColor(Color.GRAY);
+                            tv.setText(name);
+                            mMembers.put(name, tv);
+                            mList.addView(tv);
+                            FlowLayout.LayoutParams lp = (FlowLayout.LayoutParams)
+                                    tv.getLayoutParams();
+                            lp.setMargins(10, 10, 10, 10);
+                        }
                     }
                     if(guests.size() == 0) {
                         mGuests.setText("无");
@@ -333,13 +340,8 @@ public class Meeting extends Activity implements View.OnClickListener,
                         }
                         mGuests.setText(sb.substring(0, sb.length() - 1));
                     }
-                    String text = mList.getText().toString();
-                    ArrayList<String> signed = new ArrayList<>();
-                    String[] members = text.split(" ");
-                    if(members.length > 0) {
-                        Collections.addAll(signed, members);
-                    }
-                    refreshList(signed);
+
+                    refreshList(mSigned);
                 }
             });
             HttpHelper.sRequestQueue.add(members);
@@ -355,7 +357,7 @@ public class Meeting extends Activity implements View.OnClickListener,
         @Override
         public void onResponse(JSONObject response) {
             JSONArray list = response.optJSONArray("data");
-            ArrayList<String> signed = new ArrayList<>();
+            LinkedHashSet<String> signed = mSigned;
             if(list != null && list.length() > 0) {
                 for(int i = 0; i < list.length(); i++) {
                     String member = list.optJSONObject(i).optString("id");
@@ -375,30 +377,15 @@ public class Meeting extends Activity implements View.OnClickListener,
             mProgress.setVisibility(View.INVISIBLE);
         }
 
-        private void refreshList(ArrayList<String> signed) {
-            StringBuilder sb = new StringBuilder();
-            for(String name : signed) {
-                sb.append(name);
-                sb.append(' ');
-                if(mAbsentMembers.contains(name))
-                    mAbsentMembers.remove(name);
-            }
-            int len = sb.length();
-            if(len > 0)
-                mList.setText(sb.substring(0, len - 1));
-            else
-                mList.setText(null);
+        private void refreshList(LinkedHashSet<String> signed) {
+            if(mMembers.size() == 0)
+                return;
 
-            sb = new StringBuilder();
-            for(String name : mAbsentMembers) {
-                sb.append(name);
-                sb.append(' ');
+            for(String name : signed) {
+                TextView tv = mMembers.get(name);
+                if(tv != null)
+                    tv.setTextColor(Color.BLACK);
             }
-            len = sb.length();
-            if(len > 0)
-                mAbsent.setText(sb.substring(0, len - 1));
-            else
-                mAbsent.setText(null);
         }
     }
 }

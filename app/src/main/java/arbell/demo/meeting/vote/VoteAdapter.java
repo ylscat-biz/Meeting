@@ -11,6 +11,9 @@ import android.widget.TextView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 
 import arbell.demo.meeting.R;
@@ -19,6 +22,7 @@ public class VoteAdapter extends BaseAdapter {
     private LayoutInflater mInflater;
     private JSONArray mVotes;
     private LinkedHashMap<ClipDrawable, Integer> mVoteCount = new LinkedHashMap<>();
+    private ArrayList<JSONObject> mTempList = new ArrayList<>();
 
     public VoteAdapter(LayoutInflater inflater) {
         mInflater = inflater;
@@ -57,11 +61,11 @@ public class VoteAdapter extends BaseAdapter {
         tv = (TextView) convertView.findViewById(R.id.title);
         JSONObject json = mVotes.optJSONObject(position);
         tv.setText(json.optString("title"));
-        JSONArray options = json.optJSONArray("itemlist");
+        ArrayList<JSONObject> options = sortOptions(json.optJSONArray("itemlist"));
         LinearLayout ll = (LinearLayout)convertView.findViewById(R.id.vote_option);
         LinkedHashMap<ClipDrawable, Integer> voteCount = mVoteCount;
-        int total = 0;
-        for(int i = 0; i < options.length(); i++) {
+        int total = 0, i = 0;
+        for(JSONObject option : options) {
             int count = ll.getChildCount();
             View item;
             if(i == count) {
@@ -73,7 +77,7 @@ public class VoteAdapter extends BaseAdapter {
                 if(item.getVisibility() != View.VISIBLE)
                     item.setVisibility(View.VISIBLE);
             }
-            JSONObject option = options.optJSONObject(i);
+
             tv = (TextView)item.findViewById(R.id.name);
             tv.setText(option.optString("title"));
             tv = (TextView)item.findViewById(R.id.count);
@@ -82,12 +86,14 @@ public class VoteAdapter extends BaseAdapter {
             tv.setText(String.valueOf(voteNum));
             ClipDrawable d = (ClipDrawable)item.findViewById(R.id.progress).getBackground();
             voteCount.put(d, voteNum);
+            i++;
         }
 
         int count = ll.getChildCount();
-        for(int i = options.length(); i < count; i++) {
+        for(i = options.size(); i < count; i++) {
             ll.getChildAt(i).setVisibility(View.GONE);
         }
+        options.clear();
 
         for(ClipDrawable d : voteCount.keySet()) {
             if(total == 0)
@@ -101,5 +107,24 @@ public class VoteAdapter extends BaseAdapter {
         convertView.setBackgroundColor((position&1) == 0 ? 0 : 0x33000000);
         return convertView;
     }
+
+    private ArrayList<JSONObject> sortOptions(JSONArray array) {
+        ArrayList<JSONObject> list = mTempList;
+        for(int i = 0; i < array.length(); i++) {
+            list.add(array.optJSONObject(i));
+        }
+
+        Collections.sort(list, sOptionCompare);
+        return list;
+    }
+
+    private static Comparator<JSONObject> sOptionCompare = new Comparator<JSONObject>() {
+        @Override
+        public int compare(JSONObject j1, JSONObject j2) {
+            String t1 = j1.optString("title");
+            String t2 = j2.optString("title");
+            return t1.compareTo(t2);
+        }
+    };
 }
 

@@ -56,11 +56,13 @@ public class PreachControllerL2 implements View.OnClickListener, Preach.PreachLi
                             else {
                                 mPreach.setMode(Preach.FOLLOW);
                                 mPreachButton.setText("跟随中");
+                                mDocViewer.setEnable(false);
                             }
                         }
                         else {
                             mPreach.setMode(Preach.PREACH);
                             mDocViewer.uploadCurrent();
+                            mDocViewer.setEnable(true);
                             mPreachButton.setText("主讲中");
                         }
                     }
@@ -70,11 +72,13 @@ public class PreachControllerL2 implements View.OnClickListener, Preach.PreachLi
             case Preach.IDLE:
                 mPreach.setMode(Preach.SCANING);
                 mPreachButton.setText("跟随");
+                mDocViewer.setEnable(true);
                 break;
             case Preach.PREACH:
                 mPreach.upload(null);
                 mPreach.setMode(Preach.SCANING);
                 mPreachButton.setText("主讲模式");
+                mDocViewer.setEnable(true);
                 break;
         }
     }
@@ -126,6 +130,7 @@ public class PreachControllerL2 implements View.OnClickListener, Preach.PreachLi
                 else {
                     mPreachButton.setText("主讲模式");
                     mPreach.setMode(Preach.SCANING);
+                    mDocViewer.setEnable(true);
                 }
                 break;
         }

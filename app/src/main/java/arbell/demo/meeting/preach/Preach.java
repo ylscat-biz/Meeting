@@ -58,8 +58,8 @@ public class Preach implements Runnable {
     }
 
     public void checkPreacher(final PreachListener listener) {
-        Request request = new Request(Request.Method.GET,
-                mMonitor.getUrl(), null,
+        Request request = new Request(Request.Method.POST,
+                mMonitor.getUrl(), mSetPrefix,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -84,7 +84,7 @@ public class Preach implements Runnable {
         if(msg != null) {
             set += "&msg=" + msg;
         }
-        Request upload = new Request(Request.Method.GET,
+        Request upload = new Request(Request.Method.POST,
                 HttpHelper.URL_BASE + "setCache",
                 set,
                 new Response.Listener<JSONObject>() {

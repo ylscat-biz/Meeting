@@ -438,6 +438,12 @@ public class DocViewer extends Activity implements View.OnClickListener {
             mSlider.setDisplayedViewIndex(page);
     }
 
+    public void setEnable(boolean enable) {
+        if(mSlider == null)
+            return;
+        mSlider.setEnabled(enable);
+    }
+
     private void showVoteTopicDialog() {
         final Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.topic_input);

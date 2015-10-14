@@ -139,7 +139,7 @@ public class Schedule extends Activity implements View.OnClickListener {
         tab.setOnClickListener(this);
         mAdapters.put(tab, closed);
 
-        findViewById(R.id.closed).setOnClickListener(this);
+        tab.setVisibility(View.GONE);
         onClick(findViewById(R.id.holding));
     }
 
