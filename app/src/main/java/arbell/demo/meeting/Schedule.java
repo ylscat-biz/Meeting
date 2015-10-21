@@ -31,7 +31,9 @@ public class Schedule extends Activity implements View.OnClickListener {
 
     private HashMap<View, Adapter> mAdapters = new HashMap<>();
 
-    private View.OnClickListener launcher = new View.OnClickListener() {
+    private Launcher mLauncher = new Launcher();
+
+    class Launcher implements View.OnClickListener {
         @Override
         public void onClick(View v) {
             int pos = mListView.getPositionForView(v);
@@ -39,15 +41,19 @@ public class Schedule extends Activity implements View.OnClickListener {
                 return;
             JSONObject meeting = (JSONObject)mListView.getAdapter().getItem(pos);
             if(meeting != null) {
-                Intent intent = new Intent(Schedule.this, Meeting.class);
-                intent.putExtra(Meeting.TITLE, meeting.optString("name"));
-                intent.putExtra(Meeting.ID, meeting.optString("id"));
-                intent.putExtra(Meeting.TIME, meeting.optString("open_time"));
-                intent.putExtra(Meeting.ADDRESS, meeting.optString("address"));
-                intent.putExtra(Meeting.HOST, meeting.optString("teamer"));
-                intent.putExtra(Meeting.TOPIC, meeting.optString("meeting_topic"));
-                startActivity(intent);
+                launch(meeting);
             }
+        }
+
+        public void launch(JSONObject meeting) {
+            Intent intent = new Intent(Schedule.this, Meeting.class);
+            intent.putExtra(Meeting.TITLE, meeting.optString("name"));
+            intent.putExtra(Meeting.ID, meeting.optString("id"));
+            intent.putExtra(Meeting.TIME, meeting.optString("open_time"));
+            intent.putExtra(Meeting.ADDRESS, meeting.optString("address"));
+            intent.putExtra(Meeting.HOST, meeting.optString("teamer"));
+            intent.putExtra(Meeting.TOPIC, meeting.optString("meeting_topic"));
+            startActivity(intent);
         }
     };
 
@@ -97,8 +103,11 @@ public class Schedule extends Activity implements View.OnClickListener {
                         int count = holding.getCount();
                         TextView tv = (TextView)((ViewGroup)tab).getChildAt(1);
                         tv.setText(String.valueOf(count));
-                        if(count > 0)
+                        if(count > 0) {
                             holding.notifyDataSetChanged();
+                            if(count == 1)
+                                mLauncher.launch(holding.mMeetings.get(0));
+                        }
 
                         tab = findViewById(R.id.future);
                         count = future.getCount();
@@ -178,7 +187,7 @@ public class Schedule extends Activity implements View.OnClickListener {
         public View getView(int position, View convertView, ViewGroup parent) {
             if(convertView == null) {
                 convertView = mInflater.inflate(R.layout.meeting_item, parent, false);
-                convertView.findViewById(R.id.enter).setOnClickListener(launcher);
+                convertView.findViewById(R.id.enter).setOnClickListener(mLauncher);
             }
             JSONObject json = mMeetings.get(position);
             TextView tv = (TextView)convertView.findViewById(R.id.title);
