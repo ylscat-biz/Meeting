@@ -156,7 +156,7 @@ public class DocPanel {
                                     s.title = subject.optString("title");
                                     try {
                                         if(json.has("file_json")) {
-                                            String str = json.optString("file_json");
+                                            String str = subject.optString("file_json");
                                             if(str.length() > 0)
                                                 files = new JSONArray(str);
                                         }
