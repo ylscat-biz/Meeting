@@ -80,7 +80,8 @@ public class VoteActivity extends Activity implements
             }
         };
         if(Meeting.sPreach.getMode() == Preach.PREACH) {
-            Meeting.sPreach.upload("1_" + vote.optString("id"));
+            String status = DocViewer.mPreachController.mDocViewer.getCurrentStatusString();
+            Meeting.sPreach.upload(status + " " + vote.toString());
         }
     }
 

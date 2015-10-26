@@ -120,8 +120,11 @@ public class Meeting extends Activity implements View.OnClickListener,
         findViewById(R.id.create).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(sPreach.getMode() == Preach.FOLLOW)
+                if(sPreach.getMode() == Preach.FOLLOW) {
+                    Toast.makeText(Meeting.this, "跟随中，无法操作",
+                            Toast.LENGTH_SHORT).show();
                     return;
+                }
                 Dialog dialog = new Dialog(Meeting.this);
                 dialog.setContentView(R.layout.create_vote);
 //                dialog.findViewById(R.id.back).setOnClickListener(new DialogController(dialog));
@@ -199,8 +202,11 @@ public class Meeting extends Activity implements View.OnClickListener,
     public void onClick(View v) {
         if(v != mSelected) {
             int mode = sPreach.getMode();
-            if(mode == Preach.FOLLOW)
+            if(mode == Preach.FOLLOW) {
+                Toast.makeText(this, "跟随中，无法操作",
+                        Toast.LENGTH_SHORT).show();
                 return;
+            }
             selectTab(v);
             if(mode == Preach.PREACH) {
                 uploadCurrent();
@@ -233,19 +239,22 @@ public class Meeting extends Activity implements View.OnClickListener,
         if(index == 1) {
             int docTab = mDocPanel.getTabIndex();
             if(docTab != -1)
-                msg += docTab;
+                msg += " " + docTab;
         }
         sPreach.upload(msg);
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if(sPreach.getMode() == Preach.FOLLOW)
+        if(sPreach.getMode() == Preach.FOLLOW) {
+            Toast.makeText(this, "跟随中，无法操作",
+                    Toast.LENGTH_SHORT).show();
             return;
+        }
         JSONObject vote = (JSONObject)parent.getAdapter().getItem(position);
         popupVote(vote);
         if(sPreach.getMode() == Preach.PREACH) {
-            sPreach.upload("2" + position);
+            sPreach.upload("2 " + vote.toString());
         }
     }
 

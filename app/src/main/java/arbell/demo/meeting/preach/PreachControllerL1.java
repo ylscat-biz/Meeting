@@ -1,6 +1,8 @@
 package arbell.demo.meeting.preach;
 
+import android.app.Dialog;
 import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -10,6 +12,7 @@ import org.json.JSONObject;
 
 import java.net.URLDecoder;
 
+import arbell.demo.meeting.Login;
 import arbell.demo.meeting.Meeting;
 import arbell.demo.meeting.R;
 
@@ -26,37 +29,49 @@ public class PreachControllerL1 implements View.OnClickListener, Preach.PreachLi
         mPreach = Meeting.sPreach;
         mPreach.setMode(Preach.SCANING);
         mPreach.setListener(this);
+
+        mPreachButton.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if(mPreach.getMsg() == null)
+                    return;
+                String msg = mPreach.getMsg();
+                if(msg.startsWith(Login.sMemberID)) {
+                    int index = msg.indexOf('\n');
+                    String line = msg.substring(0, index);
+                    mPreach.setUploadPrefix(line);
+                    mPreach.setMode(Preach.PREACH);
+                    mMeeting.uploadCurrent();
+                    boolean force = line.charAt(line.length() - 1) == 'F';
+                    if (force)
+                        mPreachButton.setText("强制主讲中");
+                    else
+                        mPreachButton.setText("普通主讲中");
+                }
+
+            }
+        }, 2000);
     }
 
     @Override
     public void onClick(View v) {
         switch (mPreach.getMode()) {
             case Preach.SCANING:
-                mPreach.checkPreacher(new Preach.PreachListener() {
-                    @Override
-                    public void onUpdate(String msg) {
-                        if(msg != null) {
-                            if(mPreach.getMsg() == null) {
-                                onUpdate(msg);
-                                Toast.makeText(mMeeting,
-                                        "已经有主讲人了",
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                            else {
-                                mPreach.setMode(Preach.FOLLOW);
-                                mPreachButton.setText("跟随中");
-                            }
-                        }
-                        else {
-                            mPreach.setMode(Preach.PREACH);
-                            mMeeting.uploadCurrent();
-                            mPreachButton.setText("主讲中");
-                        }
-                    }
-                });
+                if(mPreach.getMsg() == null) {
+                    promptMode();
+                }
+                else {
+                    mPreach.setMode(Preach.FOLLOW);
+                    mPreachButton.setText("跟随中");
+                }
                 break;
             case Preach.FOLLOW:
             case Preach.IDLE:
+                if(mPreach.isForcePreaching()) {
+                    Toast.makeText(mMeeting, "强制主讲中，不能退出",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 mPreach.setMode(Preach.SCANING);
                 mPreachButton.setText("跟随");
                 break;
@@ -66,6 +81,50 @@ public class PreachControllerL1 implements View.OnClickListener, Preach.PreachLi
                 mPreachButton.setText("主讲模式");
                 break;
         }
+    }
+
+    private void promptMode() {
+        final Dialog dialog = new Dialog(mMeeting, android.R.style.
+                Theme_DeviceDefault_Light_Dialog_NoActionBar);
+        dialog.setContentView(R.layout.preach_mode_prompt);
+        dialog.findViewById(R.id.normal).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startPreach(false);
+                dialog.dismiss();
+            }
+        });
+        dialog.findViewById(R.id.force).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startPreach(true);
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
+    }
+
+    private void startPreach(final boolean force) {
+        mPreach.checkPreacher(new Preach.PreachListener() {
+            @Override
+            public void onUpdate(String msg) {
+                if(msg != null) {
+                    Toast.makeText(mMeeting,
+                            "已经有主讲人了",
+                            Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    String flag = force ? "F" : "N";
+                    mPreach.setUploadPrefix(String.format("%s %s", Login.sMemberID, flag));
+                    mPreach.setMode(Preach.PREACH);
+                    mMeeting.uploadCurrent();
+                    if (force)
+                        mPreachButton.setText("强制主讲中");
+                    else
+                        mPreachButton.setText("普通主讲中");
+                }
+            }
+        });
     }
 
     @Override
@@ -81,8 +140,10 @@ public class PreachControllerL1 implements View.OnClickListener, Preach.PreachLi
                 break;
             case Preach.FOLLOW:
                 if(msg != null) {
-                    int index = msg.charAt(0) - '0';
-                    int msgLen = msg.length();
+                    String[] lines = msg.split("\n");
+                    String line = lines[1];
+                    int index = line.charAt(0) - '0';
+                    int msgLen = line.length();
                     mMeeting.selectTab(index);
                     if(msgLen > 1) {
                         if (index == 2) {
@@ -90,30 +151,23 @@ public class PreachControllerL1 implements View.OnClickListener, Preach.PreachLi
                                 break;
                             mLastVoteMsg = msg;
                             try {
-                                String voteString = msg.substring(1);
-                                int votePos = Integer.parseInt(voteString);
-                                JSONObject vote = mMeeting.getVote(votePos);
+                                String voteString = line.substring(2);
+
+                                JSONObject vote = new JSONObject(voteString);
                                 mMeeting.popupVote(vote);
                                 mPreach.setMode(Preach.IDLE);
-                            } catch (NumberFormatException e) {
+                            } catch (JSONException e) {
                                 Toast.makeText(mMeeting, "无法打开投票",
                                         Toast.LENGTH_SHORT).show();
                             }
                         }
                         else if (index == 1) {
-                            index = msg.indexOf(',');
-                            if(index > 2) {
-                                int tab = Integer.parseInt(msg.substring(1, index));
-                                mMeeting.mDocPanel.selectTab(tab);
-                            }
-                            else if(index == -1) {
-                                int tab = Integer.parseInt(msg.substring(1));
-                                mMeeting.mDocPanel.selectTab(tab);
-                            }
+                            String s = line.substring(2);
+                            int tab = Integer.parseInt(s);
+                            mMeeting.mDocPanel.selectTab(tab);
 
-                            if(index != -1) {
-                                String file = msg.substring(index + 1);
-                                openDoc(file);
+                            if(lines.length == 3) {
+                                openDoc(lines[2]);
                             }
                         }
                     }
@@ -126,11 +180,18 @@ public class PreachControllerL1 implements View.OnClickListener, Preach.PreachLi
         }
     }
 
-    private void openDoc(String file) {
-        int index = file.indexOf(';');
-        String id = file;
-        if(index != -1)
-            id = file.substring(0, index);
+    private void openDoc(String line) {
+        int index = line.indexOf('#');
+        if(index == -1) {
+            index = line.indexOf(' ');
+        }
+
+        String id;
+        if(index == -1)
+            id = line;
+        else
+            id = line.substring(0, index);
+
         mMeeting.mDocPanel.openDoc(id);
     }
 }

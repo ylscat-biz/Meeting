@@ -58,12 +58,13 @@ public class DocPanel {
             public void onClick(View v) {
                 if(v != mSelectedTopic) {
                     int mode = sPreach.getMode();
-                    if(mode == Preach.FOLLOW)
+                    if(mode == Preach.FOLLOW) {
                         return;
+                    }
                     selectTab(v);
                     if(mode == Preach.PREACH) {
                         int index = mTabPanel.indexOfChild(v);
-                        sPreach.upload("1" + index);
+                        sPreach.upload("1 " + index);
                     }
                 }
             }
@@ -445,7 +446,7 @@ public class DocPanel {
                 openDoc(doc, topicId, subjectId);
             if(sPreach.getMode() == Preach.PREACH) {
                 int index = mTabPanel.indexOfChild(mSelectedTopic);
-                String msg = String.format("1%d,%s", index,
+                String msg = String.format("1 %d\n%s", index,
                         doc.id);
                 sPreach.upload(msg);
             }

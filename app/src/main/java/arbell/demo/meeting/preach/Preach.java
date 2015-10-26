@@ -17,6 +17,7 @@ public class Preach implements Runnable {
 
     private Handler mHandler = new Handler();
     private String mLastMsg;
+    private String mUploadPrefix;
 
     public static final int IDLE = 0;
     public static final int SCANING = 1;
@@ -46,9 +47,9 @@ public class Preach implements Runnable {
                         }
                         if(msg == mLastMsg || (msg != null && msg.equals(mLastMsg)))
                             return;
+                        mLastMsg = msg;
                         if(mListener != null)
                             mListener.onUpdate(msg);
-                        mLastMsg = msg;
                     }
                 });
     }
@@ -82,7 +83,7 @@ public class Preach implements Runnable {
     public void upload(String msg) {
         String set = mSetPrefix;
         if(msg != null) {
-            set += "&msg=" + msg;
+            set += "&msg=" + String.format("%s\n%s", mUploadPrefix, msg);
         }
         Request upload = new Request(Request.Method.POST,
                 HttpHelper.URL_BASE + "setCache",
@@ -99,6 +100,7 @@ public class Preach implements Runnable {
     public void setMode(int mode) {
         if(mode == mMode)
             return;
+        mMode = mode;
         switch (mode) {
             case IDLE:
             case SCANING:
@@ -106,7 +108,9 @@ public class Preach implements Runnable {
                 mHandler.postDelayed(this, 500);
                 break;
             case FOLLOW:
-                mLastMsg = null;
+                if (mLastMsg != null && mListener != null) {
+                    mListener.onUpdate(mLastMsg);
+                }
                 mHandler.removeCallbacks(this);
                 mHandler.postDelayed(this, 500);
                 break;
@@ -114,7 +118,6 @@ public class Preach implements Runnable {
                 mHandler.removeCallbacks(this);
                 break;
         }
-        mMode = mode;
     }
 
     public void stop() {
@@ -127,6 +130,20 @@ public class Preach implements Runnable {
 
     public int getMode() {
         return mMode;
+    }
+
+    public void setUploadPrefix(String prefix) {
+        mUploadPrefix = prefix;
+    }
+
+    public boolean isForcePreaching() {
+        if(mLastMsg != null) {
+            int index = mLastMsg.indexOf('\n');
+            if(index != -1)
+                return mLastMsg.charAt(index - 1) == 'F';
+        }
+
+        return false;
     }
 
     @Override

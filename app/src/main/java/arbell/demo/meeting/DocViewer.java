@@ -184,7 +184,7 @@ public class DocViewer extends Activity implements View.OnClickListener {
             mCore.onDestroy();
         }
         if(sPreach.getMode() == Preach.PREACH) {
-            String msg = String.format("1%s", topicIndex);
+            String msg = String.format("1 %s", topicIndex);
             sPreach.upload(msg);
         }
         mPreachController = null;
@@ -192,8 +192,11 @@ public class DocViewer extends Activity implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
-        if(sPreach.getMode() == Preach.FOLLOW)
+        if(sPreach.getMode() == Preach.FOLLOW) {
+            Toast.makeText(this, "跟随中，无法操作",
+                    Toast.LENGTH_SHORT).show();
             return;
+        }
         switch (v.getId()) {
             case R.id.back:
                 finish();
@@ -202,12 +205,13 @@ public class DocViewer extends Activity implements View.OnClickListener {
                 TextView tv = (TextView)v;
                 if(mSlider.getMode() != MuPDFReaderView.Mode.Viewing) {
                     tv.setText("手绘注释");
-                    mSlider.setMode(MuPDFReaderView.Mode.Viewing);
                     tv.setCompoundDrawables(mDrawing, null, null, null);
                     findViewById(R.id.clear).setVisibility(View.INVISIBLE);
                     PageView pv = (PageView)mSlider.getDisplayedView();
                     if(pv.getDrawing() != null)
                         save(pv);
+                    ((MuPDFPageView)pv).saveDraw();
+                    mSlider.setMode(MuPDFReaderView.Mode.Viewing);
                 } else {
                     tv.setText("保存");
                     mSlider.setMode(MuPDFReaderView.Mode.Drawing);
@@ -419,11 +423,15 @@ public class DocViewer extends Activity implements View.OnClickListener {
     }
 
     public void uploadCurrent() {
-        String msg = String.format("1%s,%s", topicIndex, fileId);
+        sPreach.upload(getCurrentStatusString());
+    }
+
+    public String getCurrentStatusString() {
+        String msg = String.format("1 %s\n%s", topicIndex, fileId);
         if(mSlider != null) {
-            msg += ";"+mSlider.getDisplayedViewIndex();
+            msg += "#"+mSlider.getDisplayedViewIndex();
         }
-        sPreach.upload(msg);
+        return msg;
     }
 
     public void moveToPage(int page) {
@@ -442,6 +450,7 @@ public class DocViewer extends Activity implements View.OnClickListener {
         if(mSlider == null)
             return;
         mSlider.setEnabled(enable);
+        mSlider.setClickable(enable);
     }
 
     private void showVoteTopicDialog() {
