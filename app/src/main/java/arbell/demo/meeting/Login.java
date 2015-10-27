@@ -3,6 +3,7 @@ package arbell.demo.meeting;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
@@ -20,6 +21,9 @@ import arbell.demo.meeting.network.Request;
 public class Login extends Activity implements View.OnClickListener {
     public static String sMemberID;
     public static String sMemberName;
+
+    public static final String SP_NAME = "meeting";
+    private static final String NAME = "name";
     /**
      * Called when the activity is first created.
      */
@@ -39,6 +43,13 @@ public class Login extends Activity implements View.OnClickListener {
         });
 
         findViewById(R.id.settings).setOnClickListener(this);
+
+        SharedPreferences sp = getSharedPreferences(SP_NAME, MODE_PRIVATE);
+        String name = sp.getString("name", null);
+        if(name != null) {
+            EditText et = (EditText)findViewById(R.id.name);
+            et.setText(name);
+        }
     }
 
     @Override
@@ -85,7 +96,9 @@ public class Login extends Activity implements View.OnClickListener {
                         JSONObject data = response.optJSONObject("data");
                         if(data != null) {
                             sMemberID = data.optString("id");
-                            sMemberName = data.optString("name");
+                            String name = sMemberName = data.optString("name");
+                            getSharedPreferences(SP_NAME, MODE_PRIVATE).edit()
+                                    .putString(NAME, name).apply();
                         }
                         Intent intent = new Intent(Login.this, Schedule.class);
                         startActivity(intent);
