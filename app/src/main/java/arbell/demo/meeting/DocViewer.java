@@ -33,8 +33,11 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.LinkedHashMap;
 
+import arbell.demo.meeting.annotation.LocalAnnotationAdapter;
 import arbell.demo.meeting.doc.ExcelReader;
 import arbell.demo.meeting.doc.ExcelTabController;
 import arbell.demo.meeting.doc.GetDocUrl;
@@ -73,7 +76,7 @@ public class DocViewer extends Activity implements View.OnClickListener {
 
     private VideoView mVideoView;
 
-    public static PreachControllerL2 mPreachController;
+    public static PreachControllerL2 sPreachController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +90,7 @@ public class DocViewer extends Activity implements View.OnClickListener {
         topicIndex = intent.getStringExtra(TOPIC_INDEX);
 
         setContentView(R.layout.doc_viewer);
-        mPreachController = new PreachControllerL2(this);
+        sPreachController = new PreachControllerL2(this);
         mProgress = findViewById(R.id.progress);
         mSeekBar = (SeekBar)findViewById(R.id.seek);
         mSeekBar.setMax(MAX_RANGE);
@@ -173,8 +176,8 @@ public class DocViewer extends Activity implements View.OnClickListener {
     @Override
     protected void onResume() {
         super.onResume();
-        sPreach.setListener(mPreachController);
-        mPreachController.onUpdate(sPreach.getMsg());
+        sPreach.setListener(sPreachController);
+        sPreachController.onUpdate(sPreach.getMsg());
     }
 
     @Override
@@ -187,7 +190,7 @@ public class DocViewer extends Activity implements View.OnClickListener {
             String msg = String.format("1 %s", topicIndex);
             sPreach.upload(msg);
         }
-        mPreachController = null;
+        sPreachController = null;
     }
 
     @Override
@@ -209,9 +212,9 @@ public class DocViewer extends Activity implements View.OnClickListener {
                     findViewById(R.id.clear).setVisibility(View.INVISIBLE);
                     PageView pv = (PageView)mSlider.getDisplayedView();
                     if(pv.getDrawing() != null)
-                        save(pv);
-                    ((MuPDFPageView)pv).saveDraw();
-                    mSlider.setMode(MuPDFReaderView.Mode.Viewing);
+                        save((MuPDFPageView) pv);
+                    else
+                        mSlider.setMode(MuPDFReaderView.Mode.Viewing);
                 } else {
                     tv.setText("保存");
                     mSlider.setMode(MuPDFReaderView.Mode.Drawing);
@@ -235,21 +238,35 @@ public class DocViewer extends Activity implements View.OnClickListener {
         }
     }
 
-    private void save(final View view) {
+    private void save(final MuPDFPageView view) {
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
                 Bitmap bitmap = Bitmap.createBitmap(
                         view.getWidth(), view.getHeight(), Bitmap.Config.RGB_565);
                 view.draw(new Canvas(bitmap));
-                LinkedHashMap<String, String> p = new LinkedHashMap<>();
-                p.put("id", Meeting.sMeetingID);
-                p.put("memberid", Login.sMemberID);
-                p.put("membername", Login.sMemberName);
-                UploadRequest req = new UploadRequest(HttpHelper.URL_BASE + "save_record",
-                        p, bitmap);
-                req.upload();
+                publishProgress();
+                if(Meeting.sPreach.getMode() == Preach.PREACH) {
+                    LinkedHashMap<String, String> p = new LinkedHashMap<>();
+                    p.put("id", Meeting.sMeetingID);
+                    p.put("memberid", Login.sMemberID);
+                    p.put("membername", Login.sMemberName);
+                    UploadRequest req = new UploadRequest(HttpHelper.URL_BASE + "save_record",
+                            p, bitmap);
+                    req.upload();
+                }
+                else {
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    String name = format.format(Calendar.getInstance().getTime());
+                    LocalAnnotationAdapter.saveInLocal(DocViewer.this, bitmap, name);
+                }
                 return null;
+            }
+
+            @Override
+            protected void onProgressUpdate(Void... values) {
+                view.saveDraw();
+                mSlider.setMode(MuPDFReaderView.Mode.Viewing);
             }
         }.execute();
     }
@@ -451,55 +468,5 @@ public class DocViewer extends Activity implements View.OnClickListener {
             return;
         mSlider.setEnabled(enable);
         mSlider.setClickable(enable);
-    }
-
-    private void showVoteTopicDialog() {
-        final Dialog dialog = new Dialog(this);
-        dialog.setContentView(R.layout.topic_input);
-        dialog.setTitle("投票主题");
-        View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                switch (v.getId()) {
-                    case R.id.ok:
-                        EditText input = (EditText)dialog.findViewById(R.id.input);
-                        String topic = input.getText().toString();
-                        if(topic.length() == 0) {
-                            Toast.makeText(DocViewer.this, "主题不能为空",
-                                    Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        dialog.dismiss();
-                        final Dialog d = new Dialog(dialog.getContext());
-                        d.setTitle("投票");
-                        d.setContentView(R.layout.vote);
-                        TextView title = (TextView)d.findViewById(R.id.title);
-                        title.setText(topic);
-                        d.findViewById(R.id.vote).setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                d.dismiss();
-                            }
-                        });
-                        d.findViewById(R.id.clear).setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                FingerPaintView sign = (FingerPaintView)d.findViewById(R.id.sign);
-                                sign.clear();
-                            }
-                        });
-
-                        d.show();
-                        break;
-                    case R.id.cancel:
-                        dialog.dismiss();
-                        break;
-                }
-            }
-        };
-
-        dialog.findViewById(R.id.ok).setOnClickListener(listener);
-        dialog.findViewById(R.id.cancel).setOnClickListener(listener);
-        dialog.show();
     }
 }

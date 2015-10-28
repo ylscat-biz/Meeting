@@ -1,6 +1,11 @@
 package arbell.demo.meeting.vote;
 
 import android.app.Dialog;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.util.SparseBooleanArray;
 import android.view.View;
 import android.widget.AbsListView;
@@ -15,11 +20,13 @@ import com.android.volley.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import arbell.demo.meeting.Login;
 import arbell.demo.meeting.Meeting;
 import arbell.demo.meeting.R;
+import arbell.demo.meeting.doc.DownloadTask;
 import arbell.demo.meeting.network.HttpHelper;
 import arbell.demo.meeting.network.Request;
 import arbell.demo.meeting.view.FingerPaintView;
@@ -30,6 +37,8 @@ import arbell.demo.meeting.view.FingerPaintView;
 public class VoteController implements View.OnClickListener, AdapterView.OnItemClickListener {
     private Dialog mDialog;
     private JSONObject mVote;
+    private Bitmap mSign;
+    FingerPaintView mSignView;
 
     public VoteController(Dialog dialog, JSONObject vote) {
         mDialog = dialog;
@@ -66,6 +75,55 @@ public class VoteController implements View.OnClickListener, AdapterView.OnItemC
         dialog.findViewById(R.id.back).setOnClickListener(this);
         dialog.findViewById(R.id.vote).setOnClickListener(this);
         dialog.findViewById(R.id.clear).setOnClickListener(this);
+
+        mSignView = (FingerPaintView) mDialog.findViewById(R.id.sign);
+        setupSign();
+    }
+
+    private void setupSign() {
+        String path = Login.sSign;
+        if(path == null)
+            return;
+        File file = checkFile(path);
+        if(file.exists()) {
+            mSign =  BitmapFactory.decodeFile(file.getAbsolutePath());
+            FingerPaintView fpv = (FingerPaintView) mDialog.findViewById(R.id.sign);
+            fpv.set(mSign);
+        }
+        else {
+            String server = HttpHelper.getServer(mDialog.getContext());
+            String url;
+            if(path.startsWith("/")) {
+                url = server + path;
+            }
+            else {
+                url = server + "/" + path;
+            }
+            new DownloadTask(new DownloadTask.DownloadListener() {
+                @Override
+                public void begin(int totalSize) {}
+
+                @Override
+                public void update(int progress, int total) {}
+
+                @Override
+                public void complete(File file) {
+                    mSign =  BitmapFactory.decodeFile(file.getAbsolutePath());
+                    FingerPaintView fpv = (FingerPaintView) mDialog.findViewById(R.id.sign);
+                    fpv.set(mSign);
+                }
+            }).execute(url, file.getAbsolutePath());
+        }
+    }
+
+    private File checkFile(String path) {
+        String name = path;
+        int index = path.lastIndexOf('/');
+        if(index != -1)
+            name = path.substring(index + 1);
+        Context context = mDialog.getContext();
+        File cache = context.getExternalCacheDir();
+        return new File(cache, name);
     }
 
     @Override
@@ -79,8 +137,16 @@ public class VoteController implements View.OnClickListener, AdapterView.OnItemC
                 vote();
                 break;
             case R.id.clear:
-                FingerPaintView fpv = (FingerPaintView) mDialog.findViewById(R.id.sign);
-                fpv.clear();
+                TextView tv = (TextView)v;
+                if(mSignView.isInTouchMode()) {
+                    tv.setText("重置签名");
+                    mSignView.setInTouchMode(false);
+                }
+                else {
+                    tv.setText("保存签名");
+                    mSignView.setInTouchMode(true);
+                    mSignView.clear();
+                }
                 break;
         }
     }

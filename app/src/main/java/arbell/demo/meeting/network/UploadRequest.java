@@ -64,8 +64,7 @@ public class UploadRequest {
 //            System.out.println(new String(out.getBytes()));
 
         } catch (IOException e) {
-            System.err.println("Upload IOException");
-            e.printStackTrace();
+            Log.e("Upload", "Upload IOException", e);
         }
 
     }

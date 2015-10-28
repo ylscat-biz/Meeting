@@ -5,39 +5,34 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 
 public class FingerPaintView extends View {
 
 
-    private Bitmap mBitmap;
+    private Bitmap mBitmap, mPreset;
     private Canvas mCanvas;
     private Path mPath;
     private Paint mBitmapPaint;
     private Paint mPaint;
-    private BitmapDrawable mBg;
-
-    public FingerPaintView(Context c, Bitmap bitmap) {
-        super(c);
-        mBg = new BitmapDrawable(c.getResources(), bitmap);
-
-        init();
-    }
+    private boolean inTouchMode;
 
     public FingerPaintView(Context context) {
         super(context);
-        init();
+        init(context);
     }
 
     public FingerPaintView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
+        init(context);
     }
 
-    private void init() {
+    private void init(Context context) {
         mPath = new Path();
         mBitmapPaint = new Paint(Paint.DITHER_FLAG);
         mPaint = new Paint();
@@ -47,7 +42,10 @@ public class FingerPaintView extends View {
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
-        mPaint.setStrokeWidth(12);
+        mPaint.setStrokeWidth(TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                4,
+                context.getResources().getDisplayMetrics()));
     }
 
     @Override
@@ -57,26 +55,14 @@ public class FingerPaintView extends View {
             mBitmap.recycle();
         mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
-        if(mBg != null) {
-            int bh = mBg.getIntrinsicHeight();
-            int bw = mBg.getIntrinsicWidth();
-            if (w * bh > bw * h) {
-                int nw = h / bh * bw;
-                int left = (w - nw) / 2;
-                mBg.setBounds(left, 0, left + nw, h);
-            } else {
-                int nh = w / bw * bh;
-                int top = (h - nh) / 2;
-                mBg.setBounds(0, top, w, top + nh);
-            }
+        if(w > 0 && h > 0 && mPreset != null) {
+            apply(mPreset);
+            mPreset = null;
         }
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if(mBg != null)
-            mBg.draw(canvas);
-
         canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
 
         canvas.drawPath(mPath, mPaint);
@@ -112,6 +98,8 @@ public class FingerPaintView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if(!inTouchMode)
+            return false;
         float x = event.getX();
         float y = event.getY();
 
@@ -135,5 +123,43 @@ public class FingerPaintView extends View {
     public void clear() {
         mBitmap.eraseColor(0);
         invalidate();
+    }
+
+    public void set(Bitmap b) {
+        if(mBitmap == null) {
+            mPreset = b;
+        }
+        else {
+            mBitmap.eraseColor(0);
+            apply(b);
+            invalidate();
+        }
+    }
+
+    private void apply(Bitmap b) {
+        if(b == null)
+            return;
+        int w = b.getWidth(), h = b.getHeight();
+        int bw = mBitmap.getWidth(), bh = mBitmap.getHeight();
+        Rect rect = new Rect(0, 0, bw, bh);
+        if(w < bw) {
+            rect.left = (bw - w)/2;
+            rect.right = rect.left + w;
+        }
+
+        if(h < bh) {
+            rect.top = (bh - h)/2;
+            rect.bottom = rect.top + w;
+        }
+
+        mCanvas.drawBitmap(b, null, rect, null);
+    }
+
+    public void setInTouchMode(boolean mode) {
+        inTouchMode = mode;
+    }
+
+    public boolean isInTouchMode() {
+        return inTouchMode;
     }
 }

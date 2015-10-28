@@ -33,6 +33,8 @@ public class Schedule extends Activity implements View.OnClickListener {
 
     private Launcher mLauncher = new Launcher();
 
+    private static final String INITIALED = "initialed";
+
     class Launcher implements View.OnClickListener {
         @Override
         public void onClick(View v) {
@@ -73,6 +75,8 @@ public class Schedule extends Activity implements View.OnClickListener {
         final Adapter holding = new Adapter();
         final Adapter future = new Adapter();
         final Adapter closed = new Adapter();
+        final boolean intialed = savedInstanceState != null
+                && savedInstanceState.getBoolean(INITIALED, false);
         Request request = new Request(Request.Method.POST,
                 HttpHelper.URL_BASE + "getMeeting",
                 "memberid=" + Login.sMemberID,
@@ -105,7 +109,7 @@ public class Schedule extends Activity implements View.OnClickListener {
                         tv.setText(String.valueOf(count));
                         if(count > 0) {
                             holding.notifyDataSetChanged();
-                            if(count == 1)
+                            if(count == 1 && !intialed)
                                 mLauncher.launch(holding.mMeetings.get(0));
                         }
 
@@ -150,6 +154,12 @@ public class Schedule extends Activity implements View.OnClickListener {
 
         tab.setVisibility(View.GONE);
         onClick(findViewById(R.id.holding));
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(INITIALED, true);
     }
 
     @Override

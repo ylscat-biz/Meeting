@@ -2,9 +2,11 @@ package arbell.demo.meeting;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -19,12 +21,14 @@ import org.apmem.tools.layouts.FlowLayout;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 
 import arbell.demo.meeting.annotation.AnnotationAdapter;
+import arbell.demo.meeting.annotation.AnnotationController;
 import arbell.demo.meeting.doc.DocPanel;
 import arbell.demo.meeting.network.HttpHelper;
 import arbell.demo.meeting.network.Request;
@@ -49,7 +53,7 @@ public class Meeting extends Activity implements View.OnClickListener,
     private HashMap<View, View> mTabMap = new HashMap<>();
     private ArrayList<View> mTabs = new ArrayList<>();
     private VoteAdapter mVoteAdapter;
-    private AnnotationAdapter mAnotAdatper;
+    private AnnotationController mAnnCtr;
 
     public DocPanel mDocPanel;
 
@@ -64,6 +68,8 @@ public class Meeting extends Activity implements View.OnClickListener,
 
         setContentView(R.layout.meeting);
         sMeetingID = getIntent().getStringExtra(ID);
+        if(sPreach != null)
+            sPreach.stop();
         sPreach = new Preach(sMeetingID);
         mPreachController = new PreachControllerL1(this);
         String title = getIntent().getStringExtra(TITLE);
@@ -98,9 +104,7 @@ public class Meeting extends Activity implements View.OnClickListener,
         tab.setOnClickListener(this);
         panel = findViewById(R.id.annotation_panel);
         panel.setVisibility(View.GONE);
-        ListView lv = (ListView)panel;
-        mAnotAdatper = new AnnotationAdapter(getLayoutInflater());
-        lv.setAdapter(mAnotAdatper);
+        mAnnCtr = new AnnotationController(panel);
         mTabMap.put(tab, panel);
         mTabs.add(tab);
 
@@ -109,7 +113,7 @@ public class Meeting extends Activity implements View.OnClickListener,
         findViewById(R.id.back).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                promptExit();
             }
         });
 
@@ -136,7 +140,7 @@ public class Meeting extends Activity implements View.OnClickListener,
                 new DialogController(dialog, Meeting.this);
             }
         });
-        lv = (ListView)findViewById(R.id.vote_list);
+        ListView lv = (ListView)findViewById(R.id.vote_list);
         lv.setAdapter(mVoteAdapter);
         lv.setOnItemClickListener(this);
     }
@@ -153,6 +157,8 @@ public class Meeting extends Activity implements View.OnClickListener,
     protected void onDestroy() {
         super.onDestroy();
 
+        if(sPreach == null)
+            return;
         if(sPreach.getMode() == Preach.PREACH)
             sPreach.upload(null);
         sPreach.stop();
@@ -229,7 +235,7 @@ public class Meeting extends Activity implements View.OnClickListener,
         mTabMap.get(v).setVisibility(View.VISIBLE);
         mSelected = v;
         if(v.getId() == R.id.annotation) {
-            mAnotAdatper.refresh();
+            mAnnCtr.refresh();
         }
     }
 
@@ -294,6 +300,72 @@ public class Meeting extends Activity implements View.OnClickListener,
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        promptExit();
+    }
+
+    private void promptExit() {
+        final Dialog dialog = new Dialog(Meeting.this, android.R.style.Theme_DeviceDefault_Light_Dialog_NoActionBar);
+        dialog.setContentView(R.layout.prompt);
+        dialog.setCanceledOnTouchOutside(false);
+        TextView tv = (TextView)dialog.findViewById(R.id.content);
+        tv.setText("确定退出会议吗?");
+        dialog.findViewById(R.id.ok).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                cleanAndExit();
+            }
+        });
+        dialog.findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
+    }
+
+    private void cleanAndExit() {
+        final ProgressDialog dialog = new ProgressDialog(this);
+        dialog.show();
+        dialog.setTitle("删除缓存资料...");
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                File dir = getExternalCacheDir();
+                if(dir != null) {
+                    File[] files = dir.listFiles();
+                    if(files != null) {
+                        deleteDir(dir);
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+                dialog.dismiss();
+                finish();
+            }
+
+            private void deleteDir(File dir) {
+                File[] files = dir.listFiles();
+                if(files != null) {
+                    for(File f : files) {
+                        if(f.isFile())
+                            f.delete();
+                        else if(f.isDirectory())
+                            deleteDir(f);
+                    }
+                }
+                dir.delete();
+            }
+        }.execute();
+    }
+
     class Refresh implements View.OnClickListener ,
             Response.Listener<JSONObject>, Response.ErrorListener {
         private View mButton, mProgress;
@@ -322,7 +394,8 @@ public class Meeting extends Activity implements View.OnClickListener,
                         return;
 
                     ArrayList<String> guests = new ArrayList<>();
-                    for(int i = 0; i < list.length(); i++) {
+                    //reverse the name list
+                    for(int i = list.length() - 1; i >= 0; i--) {
                         JSONObject json = list.optJSONObject(i);
                         String name = json.optString("name");
                         boolean isGuest = "yes".equals(json.optString("lx"));

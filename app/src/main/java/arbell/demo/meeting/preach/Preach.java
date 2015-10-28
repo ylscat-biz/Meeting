@@ -136,6 +136,10 @@ public class Preach implements Runnable {
         mUploadPrefix = prefix;
     }
 
+    public String getUploadPrefix() {
+        return mUploadPrefix;
+    }
+
     public boolean isForcePreaching() {
         if(mLastMsg != null) {
             int index = mLastMsg.indexOf('\n');

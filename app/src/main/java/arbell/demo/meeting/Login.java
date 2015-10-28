@@ -21,6 +21,7 @@ import arbell.demo.meeting.network.Request;
 public class Login extends Activity implements View.OnClickListener {
     public static String sMemberID;
     public static String sMemberName;
+    public static String sSign;
 
     public static final String SP_NAME = "meeting";
     private static final String NAME = "name";
@@ -99,6 +100,10 @@ public class Login extends Activity implements View.OnClickListener {
                             String name = sMemberName = data.optString("name");
                             getSharedPreferences(SP_NAME, MODE_PRIVATE).edit()
                                     .putString(NAME, name).apply();
+                            if(data.has("sign_pic"))
+                                sSign = data.optString("sign_pic");
+                            else
+                                sSign = null;
                         }
                         Intent intent = new Intent(Login.this, Schedule.class);
                         startActivity(intent);

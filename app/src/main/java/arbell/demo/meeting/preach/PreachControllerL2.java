@@ -35,15 +35,15 @@ public class PreachControllerL2 implements View.OnClickListener, Preach.PreachLi
         mPreach = Meeting.sPreach;
 
         if(mPreach.getMode() == Preach.PREACH) {
-            String msg = mPreach.getMsg();
-            if(msg != null) {
-                int index = msg.indexOf('\n');
-                char c = msg.charAt(index - 1);
+            String upload = mPreach.getUploadPrefix();
+            String label = "普通主讲中";
+            if(upload != null) {
+                int len = upload.length();
+                char c = upload.charAt(len - 1);
                 if(c == 'F')
-                    mPreachButton.setText("强制主讲中");
-                else
-                    mPreachButton.setText("普通主讲中");
+                    label = "强制主讲中";
             }
+            mPreachButton.setText(label);
             mDocViewer.setEnable(false);
         }
         else if(mPreach.getMode() == Preach.FOLLOW)

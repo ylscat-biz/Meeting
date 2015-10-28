@@ -1,49 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
-             android:background="@drawable/login_bg"
-        >
-    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
-            android:layout_gravity="center">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:layout_gravity="center"
+                  android:background="@drawable/login_bg">
         <LinearLayout android:layout_width="0px"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:layout_margin="100dp"
-                android:padding="50dp"
                 android:background="@drawable/login_right">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
                 android:textColor="@android:color/black"
                 android:textSize="35sp"
-                android:layout_gravity="center"
-                android:text="昆明市地方税务局
-                会议决策系统" />
-
-            <!--TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                      android:textColor="@android:color/black"
-                      android:textSize="30sp"
-                      android:layout_gravity="center"
-                    android:text="登录 Login"
-                    android:textAppearance="?android:attr/textAppearanceLarge"/-->
+                android:text="@string/sys_name" />
 
             <EditText android:id="@+id/name"
-                   android:layout_width="match_parent" android:layout_height="wrap_content"
+                      android:layout_width="wrap_content" android:layout_height="wrap_content"
                       android:layout_marginTop="40dp"
                       android:layout_marginBottom="20dp"
+                      android:minWidth="300dp"
                     android:hint="用户名"
                     android:inputType="text"/>
-            <EditText android:layout_width="match_parent" android:layout_height="wrap_content"
+            <EditText android:layout_width="wrap_content" android:layout_height="wrap_content"
                     android:id="@+id/password"
+                    android:minWidth="300dp"
                     android:hint="密码"
                     android:inputType="textPassword"
                     android:layout_marginBottom="20dp"
                     android:imeActionLabel="登录"
                     android:imeActionId="@+id/enter"
                     android:imeOptions="actionGo"/>
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            <TextView android:layout_width="120dp" android:layout_height="wrap_content"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
                     android:id="@+id/ok"
@@ -67,5 +57,4 @@
             >
         </FrameLayout>
     </LinearLayout>
-</FrameLayout>
 

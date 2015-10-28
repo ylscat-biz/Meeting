@@ -13,7 +13,6 @@ import org.json.JSONObject;
 
 import arbell.demo.meeting.preach.Preach;
 import arbell.demo.meeting.vote.DialogController;
-import arbell.demo.meeting.vote.Vote;
 import arbell.demo.meeting.vote.VoteAdapter;
 import arbell.demo.meeting.vote.VoteController;
 import arbell.demo.meeting.vote.VoteManager;
@@ -70,7 +69,7 @@ public class VoteActivity extends Activity implements
             @Override
             public void onDismiss(DialogInterface dialog) {
                 if (sPreach.getMode() == Preach.PREACH)
-                    DocViewer.mPreachController.mDocViewer.uploadCurrent();
+                    DocViewer.sPreachController.mDocViewer.uploadCurrent();
             }
         });
         new VoteController(dialog, vote) {
@@ -80,7 +79,7 @@ public class VoteActivity extends Activity implements
             }
         };
         if(Meeting.sPreach.getMode() == Preach.PREACH) {
-            String status = DocViewer.mPreachController.mDocViewer.getCurrentStatusString();
+            String status = DocViewer.sPreachController.mDocViewer.getCurrentStatusString();
             Meeting.sPreach.upload(status + " " + vote.toString());
         }
     }
