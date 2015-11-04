@@ -16,15 +16,23 @@ public class UploadRequest {
     private LinkedHashMap<String, String> mParams =new LinkedHashMap<>();
     private Bitmap mBitmap;
     private String mUrl;
+    private String mFileName = "pic.jpg";
 
     public UploadRequest(String url, LinkedHashMap<String, String> params,
                          Bitmap bitmap) {
+        this(url, params, bitmap, null);
+    }
+
+    public UploadRequest(String url, LinkedHashMap<String, String> params,
+                         Bitmap bitmap, String fileName) {
         mUrl = url;
         mParams.putAll(params);
         mBitmap = bitmap;
+        if(fileName != null)
+            mFileName = fileName;
     }
 
-    public void upload() {
+    public String upload() {
         try {
             URL url = new URL(mUrl);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -47,8 +55,18 @@ public class UploadRequest {
             for(String key : mParams.keySet())
                 writeEntity(out, key, mParams.get(key));
 
-            writeEntityHead(out, "file", "pic.jpg", "image/jpeg");
-            mBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
+            Bitmap.CompressFormat format;
+            String type;
+            if(mFileName.endsWith("png")) {
+                type = "image/png";
+                format = Bitmap.CompressFormat.PNG;
+            }
+            else {
+                type = "image/jpeg";
+                format = Bitmap.CompressFormat.JPEG;
+            }
+            writeEntityHead(out, "file", mFileName, type);
+            mBitmap.compress(format, 80, out);
             writeEntityEnd(out);
 
 //            writeEntity(out, "submit", "提交");
@@ -61,12 +79,13 @@ public class UploadRequest {
             String line = reader.readLine();
             Log.d("Net", "upload done: " + line);
             con.disconnect();
+            return line;
 //            System.out.println(new String(out.getBytes()));
 
         } catch (IOException e) {
             Log.e("Upload", "Upload IOException", e);
         }
-
+        return null;
     }
 
     private void writeEntityHead(OutputStream out, String name, String filename,

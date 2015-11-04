@@ -26,7 +26,7 @@
                   android:windowSoftInputMode="stateHidden|adjustPan"
                   android:configChanges="orientation"/>
         <activity android:name=".DocViewer" android:screenOrientation="sensor"
-            android:configChanges="orientation"/>
+            android:configChanges="orientation|screenSize"/>
         <activity android:name=".VoteActivity" android:screenOrientation="landscape"/>
     </application>
 </manifest>

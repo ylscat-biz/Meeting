@@ -162,4 +162,8 @@ public class FingerPaintView extends View {
     public boolean isInTouchMode() {
         return inTouchMode;
     }
+
+    public Bitmap getBitmap() {
+        return mBitmap;
+    }
 }

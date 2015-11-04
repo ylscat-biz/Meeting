@@ -4,8 +4,9 @@ import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
+import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.View;
 import android.widget.AbsListView;
@@ -16,19 +17,30 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Response;
+import com.artifex.mupdfdemo.AsyncTask;
+import com.artifex.mupdfdemo.MuPDFReaderView;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.LinkedHashMap;
 
 import arbell.demo.meeting.Login;
 import arbell.demo.meeting.Meeting;
 import arbell.demo.meeting.R;
+import arbell.demo.meeting.annotation.LocalAnnotationAdapter;
 import arbell.demo.meeting.doc.DownloadTask;
 import arbell.demo.meeting.network.HttpHelper;
 import arbell.demo.meeting.network.Request;
+import arbell.demo.meeting.network.UploadRequest;
+import arbell.demo.meeting.preach.Preach;
 import arbell.demo.meeting.view.FingerPaintView;
 
 /**
@@ -39,6 +51,7 @@ public class VoteController implements View.OnClickListener, AdapterView.OnItemC
     private JSONObject mVote;
     private Bitmap mSign;
     FingerPaintView mSignView;
+    private Drawable mResign, mSave;
 
     public VoteController(Dialog dialog, JSONObject vote) {
         mDialog = dialog;
@@ -74,7 +87,8 @@ public class VoteController implements View.OnClickListener, AdapterView.OnItemC
         title.setText(vote.optString("title"));
         dialog.findViewById(R.id.back).setOnClickListener(this);
         dialog.findViewById(R.id.vote).setOnClickListener(this);
-        dialog.findViewById(R.id.clear).setOnClickListener(this);
+        dialog.findViewById(R.id.resign).setOnClickListener(this);
+        dialog.findViewById(R.id.cancel_resign).setOnClickListener(this);
 
         mSignView = (FingerPaintView) mDialog.findViewById(R.id.sign);
         setupSign();
@@ -136,19 +150,57 @@ public class VoteController implements View.OnClickListener, AdapterView.OnItemC
             case R.id.vote:
                 vote();
                 break;
-            case R.id.clear:
+            case R.id.resign:
                 TextView tv = (TextView)v;
                 if(mSignView.isInTouchMode()) {
                     tv.setText("重置签名");
+                    tv.setCompoundDrawables(getResignDrawable(), null, null, null);
+                    mDialog.findViewById(R.id.cancel_resign).
+                            setVisibility(View.INVISIBLE);
                     mSignView.setInTouchMode(false);
+                    Bitmap sign = mSignView.getBitmap();
+                    if(sign != null) {
+                        saveSign(sign);
+                        mSign = sign;
+                    }
                 }
                 else {
                     tv.setText("保存签名");
+                    tv.setCompoundDrawables(getSaveSignDrawable(), null, null, null);
+                    mDialog.findViewById(R.id.cancel_resign).
+                            setVisibility(View.VISIBLE);
                     mSignView.setInTouchMode(true);
                     mSignView.clear();
                 }
                 break;
+            case R.id.cancel_resign:
+                tv = (TextView)mDialog.findViewById(R.id.resign);
+                tv.setText("重置签名");
+                tv.setCompoundDrawables(getResignDrawable(), null, null, null);
+                v.setVisibility(View.INVISIBLE);
+                mSignView.setInTouchMode(false);
+                mSignView.set(mSign);
         }
+    }
+
+    private Drawable getResignDrawable() {
+        if(mResign == null) {
+            Drawable d = mDialog.getContext().getResources().
+                    getDrawable(R.drawable.vote_resign);
+            d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
+            mResign = d;
+        }
+        return mResign;
+    }
+
+    private Drawable getSaveSignDrawable() {
+        if(mSave == null) {
+            Drawable d = mDialog.getContext().getResources().
+                    getDrawable(R.drawable.vote_sign);
+            d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
+            mSave = d;
+        }
+        return mSave;
     }
 
     @Override
@@ -205,6 +257,48 @@ public class VoteController implements View.OnClickListener, AdapterView.OnItemC
                 });
         HttpHelper.sRequestQueue.add(request);
         mDialog.dismiss();
+    }
+
+    private void saveSign(final Bitmap bitmap) {
+        Bitmap b = mSignView.getBitmap();
+        new AsyncTask<Void, Void, String>() {
+            @Override
+            protected String doInBackground(Void... params) {
+                publishProgress();
+
+                LinkedHashMap<String, String> p = new LinkedHashMap<>();
+                p.put("id", Login.sMemberID);
+
+                UploadRequest req = new UploadRequest(HttpHelper.URL_BASE + "save_sgin",
+                            p, bitmap, "sign.png");
+                String str = req.upload();
+                if(str != null) {
+                    try {
+                        JSONObject json = new JSONObject(str);
+                        JSONObject data = json.optJSONObject("data");
+                        String path = Login.sSign;
+                        Login.sSign = data.optString("sign_pic");
+                        checkFile(path).delete();
+                        File f = checkFile(path);
+                        FileOutputStream fos = new FileOutputStream(f);
+                        bitmap.compress(Bitmap.CompressFormat.PNG,
+                                80, fos);
+                        fos.close();
+                    } catch (JSONException e) {
+                        Log.e("Meeting", e.getMessage(), e);
+                    } catch (IOException e) {
+                        Log.e("Meeting", e.getMessage(), e);
+                    }
+                }
+                return str;
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                if(s == null)
+                    Toast.makeText(mDialog.getContext(), "签名保存失败", Toast.LENGTH_SHORT).show();
+            }
+        }.execute();
     }
 
     public void onVote() {

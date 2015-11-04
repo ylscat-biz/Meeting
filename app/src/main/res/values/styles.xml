@@ -29,6 +29,16 @@
         <item name="android:gravity">center</item>
     </style>
 
+    <style name="BlueButtonStyle" >
+        <item name="android:background">@drawable/button_blue_bg</item>
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:paddingLeft">10dp</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:textColor">@color/blue</item>
+        <item name="android:gravity">center</item>
+    </style>
+
     <style name="InfoLabel">
         <item name="android:textSize">26sp</item>
         <item name="android:textStyle">bold</item>

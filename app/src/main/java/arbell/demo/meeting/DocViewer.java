@@ -9,6 +9,7 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
@@ -239,9 +240,9 @@ public class DocViewer extends Activity implements View.OnClickListener {
     }
 
     private void save(final MuPDFPageView view) {
-        new AsyncTask<Void, Void, Void>() {
+        new AsyncTask<Void, Void, String>() {
             @Override
-            protected Void doInBackground(Void... params) {
+            protected String doInBackground(Void... params) {
                 Bitmap bitmap = Bitmap.createBitmap(
                         view.getWidth(), view.getHeight(), Bitmap.Config.RGB_565);
                 view.draw(new Canvas(bitmap));
@@ -253,20 +254,27 @@ public class DocViewer extends Activity implements View.OnClickListener {
                     p.put("membername", Login.sMemberName);
                     UploadRequest req = new UploadRequest(HttpHelper.URL_BASE + "save_record",
                             p, bitmap);
-                    req.upload();
+                    return req.upload();
                 }
                 else {
                     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     String name = format.format(Calendar.getInstance().getTime());
                     LocalAnnotationAdapter.saveInLocal(DocViewer.this, bitmap, name);
+                    return "OK";
                 }
-                return null;
             }
 
             @Override
             protected void onProgressUpdate(Void... values) {
                 view.saveDraw();
                 mSlider.setMode(MuPDFReaderView.Mode.Viewing);
+            }
+
+            @Override
+            protected void onPostExecute(String resp) {
+                if(resp == null)
+                    Log.e("Meeting", "分享注释失败");
+
             }
         }.execute();
     }
@@ -421,6 +429,7 @@ public class DocViewer extends Activity implements View.OnClickListener {
             MediaController controller = new MediaController(this);
             mVideoView.setMediaController(controller);
             mVideoView.setVideoURI(uri);
+            mVideoView.start();
 
             ViewGroup vg = (ViewGroup)findViewById(R.id.container);
             vg.addView(mVideoView, 0);
