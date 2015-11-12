@@ -12,7 +12,7 @@ import arbell.demo.meeting.Login;
 import arbell.demo.meeting.Meeting;
 import arbell.demo.meeting.R;
 
-public class PreachControllerL1 implements View.OnClickListener, Preach.PreachListener {
+public class PreachControllerL1 implements View.OnClickListener, Preach.PreachListener, View.OnLongClickListener {
     private Meeting mMeeting;
     private TextView mPreachButton;
     private Preach mPreach;
@@ -22,6 +22,7 @@ public class PreachControllerL1 implements View.OnClickListener, Preach.PreachLi
         mMeeting = meeting;
         mPreachButton = (TextView)meeting.findViewById(R.id.mode);
         mPreachButton.setOnClickListener(this);
+        mPreachButton.setOnLongClickListener(this);
         mPreach = Meeting.sPreach;
         mPreach.setMode(Preach.SCANING);
         mPreach.setListener(this);
@@ -196,5 +197,13 @@ public class PreachControllerL1 implements View.OnClickListener, Preach.PreachLi
             id = line.substring(0, index);
 
         mMeeting.mDocPanel.openDoc(id);
+    }
+
+    @Override
+    public boolean onLongClick(View v) {
+        if(mPreach.getMsg() == null || mPreach.getMode() == Preach.PREACH)
+            return false;
+        Preach.promptResetPreach(mMeeting, mPreach);
+        return true;
     }
 }

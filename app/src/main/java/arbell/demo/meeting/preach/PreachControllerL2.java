@@ -22,7 +22,8 @@ import arbell.demo.meeting.vote.VoteController;
 
 import static arbell.demo.meeting.Meeting.sPreach;
 
-public class PreachControllerL2 implements View.OnClickListener, Preach.PreachListener {
+public class PreachControllerL2 implements View.OnClickListener, Preach.PreachListener,
+        View.OnLongClickListener {
     public DocViewer mDocViewer;
     private TextView mPreachButton;
     private Preach mPreach;
@@ -32,6 +33,7 @@ public class PreachControllerL2 implements View.OnClickListener, Preach.PreachLi
         mDocViewer = docViewer;
         mPreachButton = (TextView)docViewer.findViewById(R.id.mode);
         mPreachButton.setOnClickListener(this);
+        mPreachButton.setOnLongClickListener(this);
         mPreach = Meeting.sPreach;
 
         if(mPreach.getMode() == Preach.PREACH) {
@@ -116,12 +118,11 @@ public class PreachControllerL2 implements View.OnClickListener, Preach.PreachLi
         mPreach.checkPreacher(new Preach.PreachListener() {
             @Override
             public void onUpdate(String msg) {
-                if(msg != null) {
+                if (msg != null) {
                     Toast.makeText(mDocViewer,
                             "已经有主讲人了",
                             Toast.LENGTH_SHORT).show();
-                }
-                else {
+                } else {
                     String flag = force ? "F" : "N";
                     mPreach.setUploadPrefix(String.format("%s %s", Login.sMemberID, flag));
                     mPreach.setMode(Preach.PREACH);
@@ -241,5 +242,13 @@ public class PreachControllerL2 implements View.OnClickListener, Preach.PreachLi
             }
         });
         new VoteController(dialog, vote);
+    }
+
+    @Override
+    public boolean onLongClick(View v) {
+        if(mPreach.getMsg() == null || mPreach.getMode() == Preach.PREACH)
+            return false;
+        Preach.promptResetPreach(mDocViewer, mPreach);
+        return true;
     }
 }

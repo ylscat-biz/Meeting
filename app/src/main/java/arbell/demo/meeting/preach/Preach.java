@@ -1,12 +1,17 @@
 package arbell.demo.meeting.preach;
 
+import android.app.Activity;
+import android.app.Dialog;
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
 
 import com.android.volley.Response;
 
 import org.json.JSONObject;
 
+import arbell.demo.meeting.R;
 import arbell.demo.meeting.network.HttpHelper;
 import arbell.demo.meeting.network.Request;
 
@@ -177,6 +182,27 @@ public class Preach implements Runnable {
                 mHandler.postDelayed(this, SHORT_INTERVAL);
                 break;
         }
+    }
+
+    public static void promptResetPreach(Activity activity, final Preach preach) {
+        final Dialog dialog = new Dialog(activity, android.R.style.Theme_DeviceDefault_Light_Dialog_NoActionBar);
+        dialog.setContentView(R.layout.prompt);
+        dialog.setCanceledOnTouchOutside(false);
+        TextView tv = (TextView)dialog.findViewById(R.id.content);
+        tv.setText("确定重置当前主讲人吗?");
+        dialog.findViewById(R.id.ok).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                preach.upload(null);
+            }
+        });
+        dialog.findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
     }
 
     public interface PreachListener {
