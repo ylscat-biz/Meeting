@@ -156,7 +156,8 @@ public class MuPDFReaderView extends ReaderView {
 	}
 
 	public boolean onTouchEvent(MotionEvent event) {
-
+		if(!isEnabled())
+			return false;
 		if ( mMode == Mode.Drawing )
 		{
 			float x = event.getX();
