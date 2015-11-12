@@ -201,6 +201,12 @@ public class DocViewer extends Activity implements View.OnClickListener {
                     Toast.LENGTH_SHORT).show();
             return;
         }
+
+        if(Meeting.isGuest) {
+            Toast.makeText(this, "列席人员，不能投票，不能手绘注释!",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
         switch (v.getId()) {
             case R.id.back:
                 finish();

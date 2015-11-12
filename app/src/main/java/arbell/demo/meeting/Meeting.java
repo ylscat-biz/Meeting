@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 
-import arbell.demo.meeting.annotation.AnnotationAdapter;
 import arbell.demo.meeting.annotation.AnnotationController;
 import arbell.demo.meeting.doc.DocPanel;
 import arbell.demo.meeting.network.HttpHelper;
@@ -59,6 +58,7 @@ public class Meeting extends Activity implements View.OnClickListener,
 
     public static String sMeetingID;
     public static Preach sPreach;
+    public static boolean isGuest;
     public PreachControllerL1 mPreachController;
 
     @Override
@@ -71,6 +71,7 @@ public class Meeting extends Activity implements View.OnClickListener,
         if(sPreach != null)
             sPreach.stop();
         sPreach = new Preach(sMeetingID);
+        isGuest = false;
         mPreachController = new PreachControllerL1(this);
         String title = getIntent().getStringExtra(TITLE);
         TextView tv = (TextView)findViewById(R.id.title);
@@ -129,6 +130,13 @@ public class Meeting extends Activity implements View.OnClickListener,
                             Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+                if(Meeting.isGuest) {
+                    Toast.makeText(Meeting.this,
+                            "列席人员不能创建投票!",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 Dialog dialog = new Dialog(Meeting.this);
                 dialog.setContentView(R.layout.create_vote);
 //                dialog.findViewById(R.id.back).setOnClickListener(new DialogController(dialog));
@@ -148,6 +156,7 @@ public class Meeting extends Activity implements View.OnClickListener,
     @Override
     protected void onResume() {
         super.onResume();
+        //刷新投票列表
         VoteManager.sInstance.getVotes(mVoteAdapter, null, null);
         sPreach.setListener(mPreachController);
         mPreachController.onUpdate(sPreach.getMsg());
@@ -265,6 +274,12 @@ public class Meeting extends Activity implements View.OnClickListener,
     }
 
     public void popupVote(JSONObject vote) {
+        if(Meeting.isGuest) {
+            Toast.makeText(Meeting.this,
+                    "列席人员不能投票!",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
         Dialog dialog = new Dialog(Meeting.this, android.R.style.Theme_DeviceDefault_Light_Dialog_NoActionBar);
         dialog.setContentView(R.layout.vote);
         dialog.setCanceledOnTouchOutside(false);
@@ -395,13 +410,17 @@ public class Meeting extends Activity implements View.OnClickListener,
 
                     ArrayList<String> guests = new ArrayList<>();
                     //reverse the name list
+                    String memberId = Login.sMemberID;
                     for(int i = list.length() - 1; i >= 0; i--) {
                         JSONObject json = list.optJSONObject(i);
                         String name = json.optString("name");
+                        String id = json.optString("id");
                         boolean isGuest = "yes".equals(json.optString("lx"));
-                        if(isGuest)
+                        if(isGuest) {
                             guests.add(name);
-                        else {
+                            if(memberId.equals(id))
+                                Meeting.isGuest = true;
+                        } else {
                             TextView tv = new TextView(Meeting.this);
                             tv.setTextColor(Color.GRAY);
                             tv.setText(name);

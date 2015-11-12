@@ -1,16 +1,12 @@
 package arbell.demo.meeting.preach;
 
 import android.app.Dialog;
-import android.util.Base64;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.net.URLDecoder;
 
 import arbell.demo.meeting.Login;
 import arbell.demo.meeting.Meeting;
@@ -58,6 +54,12 @@ public class PreachControllerL1 implements View.OnClickListener, Preach.PreachLi
         switch (mPreach.getMode()) {
             case Preach.SCANING:
                 if(mPreach.getMsg() == null) {
+                    if(Meeting.isGuest) {
+                        Toast.makeText(mMeeting,
+                                "列席人员不能主讲!",
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     promptMode();
                 }
                 else {
@@ -148,6 +150,8 @@ public class PreachControllerL1 implements View.OnClickListener, Preach.PreachLi
                     if(msgLen > 1) {
                         if (index == 2) {
                             if(msg.equals(mLastVoteMsg))
+                                break;
+                            if(Meeting.isGuest)
                                 break;
                             mLastVoteMsg = msg;
                             try {

@@ -58,6 +58,12 @@ public class PreachControllerL2 implements View.OnClickListener, Preach.PreachLi
         switch (mPreach.getMode()) {
             case Preach.SCANING:
                 if(mPreach.getMsg() == null) {
+                    if(Meeting.isGuest) {
+                        Toast.makeText(mDocViewer,
+                                "列席人员不能主讲!",
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     promptMode();
                 }
                 else {
@@ -154,6 +160,8 @@ public class PreachControllerL2 implements View.OnClickListener, Preach.PreachLi
                     int voteMark = line.indexOf(' ');
                     if(voteMark != - 1) {
                         if(mLastVoteMsg != null && mLastVoteMsg.equals(mPreach.getMsg()))
+                            break;
+                        if(Meeting.isGuest)
                             break;
                         String vote = line.substring(voteMark + 1);
                         try {
