@@ -68,7 +68,6 @@ public class PreachControllerL1 implements View.OnClickListener, Preach.PreachLi
                 }
                 break;
             case Preach.FOLLOW:
-            case Preach.IDLE:
                 if(mPreach.isForcePreaching()) {
                     Toast.makeText(mMeeting, "强制主讲中，不能退出",
                             Toast.LENGTH_SHORT).show();
@@ -159,7 +158,7 @@ public class PreachControllerL1 implements View.OnClickListener, Preach.PreachLi
 
                                 JSONObject vote = new JSONObject(voteString);
                                 mMeeting.popupVote(vote);
-                                mPreach.setMode(Preach.IDLE);
+                                mPreach.stop();
                             } catch (JSONException e) {
                                 Toast.makeText(mMeeting, "无法打开投票",
                                         Toast.LENGTH_SHORT).show();

@@ -19,11 +19,11 @@ public class Preach implements Runnable {
     private String mLastMsg;
     private String mUploadPrefix;
 
-    public static final int IDLE = 0;
     public static final int SCANING = 1;
     public static final int FOLLOW = 2;
     public static final int PREACH = 3;
     private int mMode = -1;
+    private boolean isScanningCache;
 
     private static final int SHORT_INTERVAL = 2000;
     private static final int LONG_INTERVAL = 5000;
@@ -102,10 +102,10 @@ public class Preach implements Runnable {
             return;
         mMode = mode;
         switch (mode) {
-            case IDLE:
             case SCANING:
                 mHandler.removeCallbacks(this);
                 mHandler.postDelayed(this, 500);
+                isScanningCache = true;
                 break;
             case FOLLOW:
                 if (mLastMsg != null && mListener != null) {
@@ -113,15 +113,30 @@ public class Preach implements Runnable {
                 }
                 mHandler.removeCallbacks(this);
                 mHandler.postDelayed(this, 500);
+                isScanningCache = true;
                 break;
             case PREACH:
                 mHandler.removeCallbacks(this);
+                isScanningCache = false;
                 break;
         }
     }
 
     public void stop() {
         mHandler.removeCallbacks(this);
+        isScanningCache = false;
+    }
+
+    public void resume() {
+        if(mMode != PREACH) {
+            mHandler.removeCallbacks(this);
+            mHandler.postDelayed(this, 500);
+            isScanningCache = true;
+        }
+    }
+
+    public boolean isScanningCache() {
+        return isScanningCache;
     }
 
     public String getMsg(){
@@ -153,7 +168,6 @@ public class Preach implements Runnable {
     @Override
     public void run() {
         switch (mMode) {
-            case IDLE:
             case SCANING:
                 HttpHelper.sRequestQueue.add(mMonitor);
                 mHandler.postDelayed(this, LONG_INTERVAL);

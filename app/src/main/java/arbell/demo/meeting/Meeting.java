@@ -160,6 +160,17 @@ public class Meeting extends Activity implements View.OnClickListener,
         VoteManager.sInstance.getVotes(mVoteAdapter, null, null);
         sPreach.setListener(mPreachController);
         mPreachController.onUpdate(sPreach.getMsg());
+        sPreach.resume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(sPreach == null)
+            return;
+        if(sPreach.isScanningCache()) {
+            sPreach.stop();
+        }
     }
 
     @Override
@@ -287,10 +298,11 @@ public class Meeting extends Activity implements View.OnClickListener,
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialog) {
-                if(sPreach.getMode() == Preach.IDLE)
-                    sPreach.setMode(Preach.FOLLOW);
-                else if(sPreach.getMode() == Preach.PREACH)
+                if(sPreach.getMode() == Preach.PREACH)
                     sPreach.upload("2");
+                else {
+                    sPreach.resume();
+                }
             }
         });
         new VoteController(dialog, vote) {

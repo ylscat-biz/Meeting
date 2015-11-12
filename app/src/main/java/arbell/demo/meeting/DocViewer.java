@@ -1,7 +1,6 @@
 package arbell.demo.meeting;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,7 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
@@ -47,7 +45,6 @@ import arbell.demo.meeting.network.UploadRequest;
 import arbell.demo.meeting.preach.Preach;
 import arbell.demo.meeting.preach.PreachControllerL2;
 import arbell.demo.meeting.view.ExcelView;
-import arbell.demo.meeting.view.FingerPaintView;
 
 import static arbell.demo.meeting.Meeting.sPreach;
 
@@ -179,6 +176,15 @@ public class DocViewer extends Activity implements View.OnClickListener {
         super.onResume();
         sPreach.setListener(sPreachController);
         sPreachController.onUpdate(sPreach.getMsg());
+        sPreach.resume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(sPreach.isScanningCache()) {
+            sPreach.stop();
+        }
     }
 
     @Override

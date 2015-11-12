@@ -73,7 +73,6 @@ public class PreachControllerL2 implements View.OnClickListener, Preach.PreachLi
                 }
                 break;
             case Preach.FOLLOW:
-            case Preach.IDLE:
                 if(mPreach.isForcePreaching()) {
                     Toast.makeText(mDocViewer, "强制主讲中，不能退出",
                             Toast.LENGTH_SHORT).show();
@@ -168,7 +167,7 @@ public class PreachControllerL2 implements View.OnClickListener, Preach.PreachLi
                             JSONObject json = new JSONObject(vote);
                             popupVote(json);
                             mLastVoteMsg = msg;
-                            mPreach.setMode(Preach.IDLE);
+                            mPreach.stop();
                         } catch (JSONException e) {
                             Toast.makeText(mDocViewer, "无法打开投票",
                                     Toast.LENGTH_SHORT).show();
@@ -220,8 +219,7 @@ public class PreachControllerL2 implements View.OnClickListener, Preach.PreachLi
                 for(int i = 0; i < array.length(); i++) {
                     JSONObject vote = array.optJSONObject(i);
                     if(id.equals(vote.optString("id"))) {
-                        if(sPreach.getMode() == Preach.FOLLOW)
-                            sPreach.setMode(Preach.IDLE);
+                        sPreach.stop();
                         popupVote(vote);
                         break;
                     }
@@ -239,8 +237,7 @@ public class PreachControllerL2 implements View.OnClickListener, Preach.PreachLi
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialog) {
-                if (sPreach.getMode() == Preach.IDLE)
-                    sPreach.setMode(Preach.FOLLOW);
+                sPreach.resume();
             }
         });
         new VoteController(dialog, vote);
