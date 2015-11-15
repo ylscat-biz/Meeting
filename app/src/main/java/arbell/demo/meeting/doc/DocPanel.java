@@ -21,6 +21,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -325,7 +327,10 @@ public class DocPanel {
                             adapter.openDoc(doc, topicId, subjectId);
                         }
                         else {
-                            adapter.downloadFile(file, doc, topicId, subjectId);
+                            if(doc.icon == R.drawable.doc_video)
+                                adapter.getVideoUrl(file, doc, topicId, subjectId);
+                            else
+                                adapter.downloadFile(file, doc, topicId, subjectId);
                         }
                     }
                     else
@@ -439,7 +444,10 @@ public class DocPanel {
                     openDoc(doc, topicId, subjectId);
                 }
                 else {
-                    downloadFile(file, doc, topicId, subjectId);
+                    if(doc.icon == R.drawable.doc_video)
+                        adapter.getVideoUrl(file, doc, topicId, subjectId);
+                    else
+                        adapter.downloadFile(file, doc, topicId, subjectId);
                 }
             }
             else
@@ -510,6 +518,35 @@ public class DocPanel {
                 }
             });
             task.execute(doc.url, file.getAbsolutePath());
+        }
+
+        private void getVideoUrl(final File file,  final Doc doc, final String topicId,
+                                  final String subjectId) {
+            final ProgressDialog dialog = new ProgressDialog(mActivity);
+            dialog.setCancelable(false);
+            dialog.show();
+            HttpHelper.sRequestQueue.add(new Request(Request.Method.GET,
+                    HttpHelper.URL_BASE + "file_url?id=" + doc.id, null,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            dialog.dismiss();
+                            JSONObject data = response.optJSONObject("data");
+                            if(data == null)
+                                return;
+                            String url = data.optString("file_path");
+                            try {
+                                FileWriter fw = new FileWriter(file);
+                                fw.write(HttpHelper.URL_SERVER + url);
+                                fw.close();
+                                doc.file = file;
+                                openDoc(doc, topicId, subjectId);
+                            }
+                            catch (IOException e) {
+                                Log.e("DocPanel", "Write file fail", e);
+                            }
+                        }
+                    }));
         }
     }
 

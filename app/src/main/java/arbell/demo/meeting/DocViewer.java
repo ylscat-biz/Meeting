@@ -31,7 +31,12 @@ import com.artifex.mupdfdemo.PageView;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.Buffer;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.LinkedHashMap;
@@ -208,7 +213,7 @@ public class DocViewer extends Activity implements View.OnClickListener {
             return;
         }
 
-        if(Meeting.isGuest) {
+        if(Meeting.isGuest && v.getId() != R.id.back) {
             Toast.makeText(this, "列席人员，不能投票，不能手绘注释!",
                     Toast.LENGTH_SHORT).show();
             return;
@@ -433,9 +438,17 @@ public class DocViewer extends Activity implements View.OnClickListener {
         }
         else if("mp4".equals(suffix) || "mkv".equals(suffix)) {
             mVideoView = new VideoView(this);
-
+            String url;
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(doc));
+                url = br.readLine();
+                br.close();
+            } catch (IOException e) {
+                Log.e("DocViewer", "Read doc fail", e);
+                return;
+            }
             //Video file
-            Uri uri = Uri.parse(doc.getAbsolutePath());
+            Uri uri = Uri.parse(url);
 
             //Create media controller
             MediaController controller = new MediaController(this);
