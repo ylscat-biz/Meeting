@@ -193,6 +193,7 @@ public class Preach implements Runnable {
         dialog.findViewById(R.id.ok).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                dialog.dismiss();
                 preach.upload(null);
             }
         });

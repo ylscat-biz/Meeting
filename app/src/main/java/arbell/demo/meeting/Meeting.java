@@ -154,6 +154,12 @@ public class Meeting extends Activity implements View.OnClickListener,
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("sMeetingID", sMeetingID);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         //刷新投票列表

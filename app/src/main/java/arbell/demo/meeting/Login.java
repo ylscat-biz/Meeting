@@ -32,6 +32,11 @@ public class Login extends Activity implements View.OnClickListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        if(savedInstanceState != null) {
+            sMemberID = savedInstanceState.getString("memberId");
+            sMemberName = savedInstanceState.getString("sMemberName");
+            sSign = savedInstanceState.getString("sSign");
+        }
 
         findViewById(R.id.ok).setOnClickListener(this);
         EditText editText = (EditText)findViewById(R.id.password);
@@ -51,6 +56,14 @@ public class Login extends Activity implements View.OnClickListener {
             EditText et = (EditText)findViewById(R.id.name);
             et.setText(name);
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("memberId", sMemberID);
+        outState.putString("sMemberName", sMemberName);
+        outState.putString("sSign", sSign);
     }
 
     @Override

@@ -487,6 +487,7 @@ public class DocPanel {
             intent.putExtra(DocViewer.FILE_ID, doc.id);
             int index = mTabPanel.indexOfChild(mSelectedTopic);
             intent.putExtra(DocViewer.TOPIC_INDEX, String.valueOf(index));
+            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
             mActivity.startActivity(intent);
         }
 
