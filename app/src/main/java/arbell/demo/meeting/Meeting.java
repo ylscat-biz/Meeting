@@ -68,6 +68,9 @@ public class Meeting extends Activity implements View.OnClickListener,
 
         setContentView(R.layout.meeting);
         sMeetingID = getIntent().getStringExtra(ID);
+        if(sMeetingID == null && savedInstanceState != null) {
+            sMeetingID = savedInstanceState.getString("meetingId");
+        }
         if(sPreach != null)
             sPreach.stop();
         sPreach = new Preach(sMeetingID);
@@ -154,12 +157,6 @@ public class Meeting extends Activity implements View.OnClickListener,
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putString("sMeetingID", sMeetingID);
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
         //刷新投票列表
@@ -189,6 +186,12 @@ public class Meeting extends Activity implements View.OnClickListener,
             sPreach.upload(null);
         sPreach.stop();
         sPreach = null;
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("meetingId", sMeetingID);
     }
 
     private void setupInfo(View panel) {
