@@ -2,6 +2,7 @@ package arbell.demo.meeting.doc;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -48,6 +49,8 @@ public class DocPanel {
     private LinearLayout mTabPanel;
     private ListView mTopicContent;
     private TextView mTitle;
+
+    private ProgressDialog mProgressDialog;
 
     public DocPanel(Activity activity, View panel) {
         mActivity = activity;
@@ -324,17 +327,26 @@ public class DocPanel {
                         File file = new File(mActivity.getExternalCacheDir(), name);
                         if(file.exists()) {
                             doc.file = file;
-                            adapter.openDoc(doc, topicId, subjectId);
+                            openDoc(doc, topicId, subjectId);
                         }
                         else {
-                            if(doc.icon == R.drawable.doc_video)
-                                adapter.getVideoUrl(file, doc, topicId, subjectId);
-                            else
-                                adapter.downloadFile(file, doc, topicId, subjectId);
+                            if(doc.icon == R.drawable.doc_video) {
+                                try {
+                                    FileWriter fw = new FileWriter(file);
+                                    fw.write(url);
+                                    fw.close();
+                                    doc.file = file;
+                                    openDoc(doc, topicId, subjectId);
+                                }
+                                catch (IOException e) {
+                                    Log.e("DocPanel", "Write file fail", e);
+                                }
+                            } else
+                                downloadFile(file, doc, topicId, subjectId);
                         }
                     }
                     else
-                        adapter.openDoc(doc, topicId, subjectId);
+                        openDoc(doc, topicId, subjectId);
                     break;
                 }
             }
@@ -353,6 +365,67 @@ public class DocPanel {
             adapter.mSubjects.add(subject);
         }
     }*/
+
+    private void downloadFile(File file,  final Doc doc, final String topicId,
+                              final String subjectId) {
+        if(sPreach.isScanningCache()) {
+            sPreach.stop();
+        }
+        final ProgressDialog dialog = new ProgressDialog(mActivity);
+        dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        dialog.setCancelable(true);
+        dialog.show();
+
+
+        DownloadTask.DownloadListener downloadListener =
+                new DownloadTask.DownloadListener() {
+            @Override
+            public void begin(int totalSize) {
+                dialog.setProgress(0);
+            }
+
+            @Override
+            public void update(int progress, int total) {
+                int p = progress*100/total;
+                dialog.setProgress(p);
+            }
+
+            @Override
+            public void complete(File file) {
+                dialog.dismiss();
+                sPreach.resume();
+                if(file != null) {
+                    doc.file = file;
+                    openDoc(doc, topicId, subjectId);
+                }
+            }
+        };
+        final DownloadTask2 task = new DownloadTask2(downloadListener,
+                doc.url, file);
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialogInterface) {
+                task.cancel();
+                sPreach.resume();
+            }
+        });
+
+        task.execute();
+    }
+
+    public void openDoc(Doc doc, String topicId, String subjectId) {
+        Intent intent = new Intent(mActivity, DocViewer.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra(DocViewer.FILE, doc.file.getPath());
+        if(topicId != null)
+            intent.putExtra(DocViewer.TOPIC_ID, topicId);
+        if(subjectId != null)
+            intent.putExtra(DocViewer.SUBJECT_ID, subjectId);
+        intent.putExtra(DocViewer.FILE_ID, doc.id);
+        int index = mTabPanel.indexOfChild(mSelectedTopic);
+        intent.putExtra(DocViewer.TOPIC_INDEX, String.valueOf(index));
+        mActivity.startActivity(intent);
+    }
 
     public class TopicAdapter extends BaseAdapter implements View.OnClickListener {
         public String mTitle, id;
@@ -439,16 +512,21 @@ public class DocPanel {
                 }
                 String name = doc.id + url.substring(index);
                 File file = new File(mActivity.getExternalCacheDir(), name);
-                if(file.exists()) {
-                    doc.file = file;
-                    openDoc(doc, topicId, subjectId);
-                }
-                else {
-                    if(doc.icon == R.drawable.doc_video)
-                        adapter.getVideoUrl(file, doc, topicId, subjectId);
-                    else
-                        adapter.downloadFile(file, doc, topicId, subjectId);
-                }
+
+                if(doc.icon == R.drawable.doc_video) {
+                    try {
+                        FileWriter fw = new FileWriter(file);
+                        fw.write(url);
+                        fw.close();
+                        doc.file = file;
+                        openDoc(doc, topicId, subjectId);
+                    }
+                    catch (IOException e) {
+                        Log.e("DocPanel", "Write file fail", e);
+                    }
+                } else
+                    downloadFile(file, doc, topicId, subjectId);
+
             }
             else
                 openDoc(doc, topicId, subjectId);
@@ -475,50 +553,6 @@ public class DocPanel {
                     break;
             }
             startActivity(intent);*/
-        }
-
-        public void openDoc(Doc doc, String topicId, String subjectId) {
-            Intent intent = new Intent(mActivity, DocViewer.class);
-            intent.putExtra(DocViewer.FILE, doc.file.getPath());
-            if(topicId != null)
-                intent.putExtra(DocViewer.TOPIC_ID, topicId);
-            if(subjectId != null)
-                intent.putExtra(DocViewer.SUBJECT_ID, subjectId);
-            intent.putExtra(DocViewer.FILE_ID, doc.id);
-            int index = mTabPanel.indexOfChild(mSelectedTopic);
-            intent.putExtra(DocViewer.TOPIC_INDEX, String.valueOf(index));
-            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            mActivity.startActivity(intent);
-        }
-
-        private void downloadFile(File file,  final Doc doc, final String topicId,
-                                  final String subjectId) {
-            final ProgressDialog dialog = new ProgressDialog(mActivity);
-            dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            dialog.setCancelable(false);
-            dialog.show();
-            DownloadTask task = new DownloadTask(new DownloadTask.DownloadListener() {
-                @Override
-                public void begin(int totalSize) {
-                    dialog.setProgress(0);
-                }
-
-                @Override
-                public void update(int progress, int total) {
-                    int p = progress*100/total;
-                    dialog.setProgress(p);
-                }
-
-                @Override
-                public void complete(File file) {
-                    dialog.dismiss();
-                    if(file != null) {
-                        doc.file = file;
-                        openDoc(doc, topicId, subjectId);
-                    }
-                }
-            });
-            task.execute(doc.url, file.getAbsolutePath());
         }
 
         private void getVideoUrl(final File file,  final Doc doc, final String topicId,

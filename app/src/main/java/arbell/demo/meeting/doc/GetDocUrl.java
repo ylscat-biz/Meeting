@@ -25,7 +25,7 @@ public class GetDocUrl implements Runnable{
         for(DocPanel.Subject sub : subjects) {
             for(DocPanel.Doc doc : sub.mDocs) {
                 if(doc.id != null) {
-                    String url = HttpHelper.URL_BASE + "getFileUrlById?id="
+                    String url = HttpHelper.URL_BASE + "file_url?id="
                             + doc.id;
                     String resp = HttpHelper.get(url);
                     if(resp != null) {
@@ -38,7 +38,7 @@ public class GetDocUrl implements Runnable{
                                         doc.name, doc.id));
                                 continue;
                             }
-                            String name = doc.url = data.optString("url");
+                            String name = doc.url = HttpHelper.URL_SERVER + data.optString("file_path");
                             String ext = getSuffix(name);
                             if("pdf".equals(ext))
                                 doc.icon = R.drawable.doc_pdf;
