@@ -25,6 +25,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 
 import arbell.demo.meeting.DocViewer;
@@ -126,8 +128,14 @@ public class DocPanel {
                         JSONArray array = response.optJSONArray("data");
                         if(array == null)
                             return;
-                        for(int i = 0; i < array.length(); i++) {
-                            JSONObject json = array.optJSONObject(i);
+                        int len = array.length();
+                        ArrayList<JSONObject> topics = new ArrayList<>(len);
+                        for(int i = 0; i < len; i++) {
+                            topics.add(array.optJSONObject(i));
+                        }
+                        Collections.sort(topics, new TopicComparator());
+                        int i = 0;
+                        for(JSONObject json : topics) {
                             JSONArray files = null;
                             try {
                                 if(json.has("file_json")) {
@@ -180,7 +188,7 @@ public class DocPanel {
                                     }
                                 }
                             }
-                            addTab(-1, "议题" + (i + 1), adapter);
+                            addTab(-1, "议题" + ++i, adapter);
                             AsyncTask.execute(new GetDocUrl(adapter));
                         }
                         if(mSelectedTopic == null && mTabPanel.getChildCount() > 0) {
@@ -597,5 +605,12 @@ public class DocPanel {
         public int icon;
         public String url;
         public File file;
+    }
+}
+
+class TopicComparator implements Comparator<JSONObject> {
+    @Override
+    public int compare(JSONObject lhs, JSONObject rhs) {
+        return lhs.optInt("sort_index") - rhs.optInt("sort_index");
     }
 }
