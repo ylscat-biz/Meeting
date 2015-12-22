@@ -14,8 +14,9 @@
                  android:largeHeap="true">
         <activity android:name=".Login"
                   android:label="@string/app_name"
-                android:screenOrientation="landscape"
-                android:windowSoftInputMode="stateHidden|adjustPan">
+                  android:alwaysRetainTaskState="true"
+                  android:screenOrientation="landscape"
+                  android:windowSoftInputMode="stateHidden|adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

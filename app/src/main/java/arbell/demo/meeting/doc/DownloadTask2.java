@@ -59,6 +59,7 @@ public class DownloadTask2 extends AsyncTask<Void, Integer, File> {
             con.addRequestProperty("Range", String.format("bytes=%d-", start));
             switch (con.getResponseCode()) {
                 case HttpURLConnection.HTTP_NO_CONTENT:
+                case 416: // Already download
                     return mTarget;
                 case HttpURLConnection.HTTP_PARTIAL:
                 case HttpURLConnection.HTTP_OK:
