@@ -8,7 +8,9 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.widget.Scroller;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -16,19 +18,20 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 
 /**
  * 2015-09-18 23:26
  */
 public class ExcelView extends View {
-    private int mFirstRow, mFirstColumn;
     private int mOffsetX, mOffsetY;
-    private int mGap;
 
     private SheetData mData;
     private Paint mPaint;
     private float mTextSize;
+    private float mScale = 1;
 
     public ExcelView(Context context) {
         this(context, null);
@@ -38,20 +41,15 @@ public class ExcelView extends View {
         super(context, attrs);
         setBackgroundColor(Color.LTGRAY);
 
-        mGap = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1,
-                getResources().getDisplayMetrics());
-        mGap = Math.max(1, mGap);
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-        mPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 22,
+        mPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 22,
                 getResources().getDisplayMetrics()));
         mTextSize = mPaint.getTextSize();
     }
 
     public void setData(SheetData data) {
         mData = data;
-        mFirstRow = 0;
-        mFirstColumn = 0;
         mOffsetY = 0;
         mOffsetX = 0;
         invalidate();
@@ -62,72 +60,56 @@ public class ExcelView extends View {
         if(mData == null)
             return;
 
-        int h = getHeight();
-        int w = getWidth();
-        int gap = mGap;
+        float h = getHeight();
+        float w = getWidth();
+        float scale = mScale;
+        float gap = mData.mGap*scale;
 
-        int bottom = mOffsetY;
-        int lastRow = mFirstRow;
+        int firstRow, lastRow;
+        int firstCol, lastCol;
 
-        ArrayList<Integer> rowHeights = mData.mRowHeights;
-        ArrayList<Integer> colWidths = mData.mColWidths;
-        if(colWidths.size() == 0 || rowHeights.size() == 0)
+        ArrayList<Integer> posX = mData.mPosX;
+        ArrayList<Integer> posY = mData.mPosY;
+        if(posX.size() == 0 || posY.size() == 0)
             return;
 
-        while (bottom < h) {
-            if(lastRow == rowHeights.size() - 1)
-                break;
-            bottom += rowHeights.get(++lastRow) + gap;
-        }
-//        for(;lastRow < rowHeights.size(); lastRow++) {
-//            bottom += rowHeights.get(lastRow) + gap;
-//            if(bottom > h)
-//                break;
-//        }
-
-        int right = mOffsetX;
-        int lastCol = mFirstColumn;
-        while (right < w) {
-            if(lastCol == colWidths.size() - 1)
-                break;
-            right += colWidths.get(++lastCol) + gap;
-        }
-//        for(;lastCol < colWidths.size(); lastCol++) {
-//            right += colWidths.get(lastCol) + gap;
-//            if(right > w)
-//                break;
-//        }
+        firstCol = Math.max(0, findProperIndex(posX, mOffsetX/scale) - 1);
+        lastCol = Math.min(posX.size() - 1, findProperIndex(posX, (mOffsetX + w)/scale));
+        firstRow = Math.max(0, findProperIndex(posY, mOffsetY/scale) - 1);
+        lastRow = Math.min(posY.size() - 1, findProperIndex(posY, (mOffsetY + h)/scale));
 
 
         HashMap<Integer, CellData> data = mData.mCellData;
+        ArrayList<Integer> rowHeights = mData.mRowHeights;
+        ArrayList<Integer> colWidths = mData.mColWidths;
         Paint paint = mPaint;
 
-        int y = mOffsetY;
+        float y = (posY.get(firstRow) - rowHeights.get(firstRow))*scale - mOffsetY;
+        float initX = (posX.get(firstCol) - colWidths.get(firstCol))*scale - mOffsetX;
+        for (int r = firstRow; r <= lastRow; r++) {
+            float x = initX;
+            h = (int)(rowHeights.get(r)*scale);
 
-        for (int r = mFirstRow; r <= lastRow; r++) {
-            int x = mOffsetX;
-            h = rowHeights.get(r);
-
-            for(int c = mFirstColumn; c <= lastCol; c++) {
-                int index = r*1000 + c;
+            for(int c = firstCol; c <= lastCol; c++) {
+                int index = r*SheetData.X_MUL + c;
                 CellData cellData = data.get(index);
-                w = colWidths.get(c);
+                w = colWidths.get(c)*scale;
 
                 paint.setColor(Color.WHITE);
                 if(cellData == null) {
                     canvas.drawRect(x, y, x + w, y + h, paint);
                 }
                 else if(cellData.spanX >= 0 && cellData.spanY >= 0){
-                    int fixW = w, fixH = h;
+                    float fixW = w, fixH = h;
                     for(int v = 1; v <= cellData.spanX; v++) {
-                        fixW += colWidths.get(c + v) + gap;
+                        fixW += colWidths.get(c + v)*scale + gap;
                     }
                     for(int v = 1; v <= cellData.spanY; v++) {
-                        fixH += rowHeights.get(r + v) + gap;
+                        fixH += rowHeights.get(r + v)*scale + gap;
                     }
 
-                    right = x + fixW;
-                    bottom = y + fixH;
+                    float right = x + fixW;
+                    float bottom = y + fixH;
 
                     canvas.drawRect(x, y, right, bottom, paint);
                     String str = cellData.value;
@@ -162,10 +144,19 @@ public class ExcelView extends View {
         }
     }
 
-    private void drawText(String str, Canvas canvas, Paint paint, int w, int h) {
+    private int findProperIndex(ArrayList<Integer> list, Number value) {
+        int index = Collections.binarySearch(list, value, NUM_COMPARATOR);
+        if(index >= 0)
+            return index;
+        else {
+            return -index - 1;
+        }
+    }
 
+    private void drawText(String str, Canvas canvas, Paint paint, float w, float h) {
+        float size = mTextSize*mScale;
+        paint.setTextSize(size);
         int len = paint.breakText(str, 0, str.length(), true, w, null);
-        float size = mTextSize;
         if(len == str.length()) {
             canvas.drawText(str, 0, (h - size)/2 -paint.ascent(), paint);
             return;
@@ -200,66 +191,78 @@ public class ExcelView extends View {
             return;
         int x = mOffsetX + dx;
         int y = mOffsetY + dy;
+        scrollTo(x, y);
+    }
 
-        ArrayList<Integer> heights = mData.mRowHeights;
-        ArrayList<Integer> widths = mData.mColWidths;
-        if(widths.size() == 0 || heights.size() == 0)
+    public void scrollTo(int x, int y) {
+        float scale = mScale;
+
+        if(x < 0) {
+            x = 0;
+        }
+        else {
+            ArrayList<Integer> posX = mData.mPosX;
+            int last = posX.size() - 1;
+            if(last == -1)
+                return;
+            int maxX = Math.max(0, (int)(posX.get(last)*scale - getWidth()));
+            if(x > maxX)
+                x = maxX;
+        }
+
+        if(y < 0) {
+            y = 0;
+        }
+        else {
+            ArrayList<Integer> posY = mData.mPosY;
+            int last = posY.size() - 1;
+            if(last == -1)
+                return;
+            int maxY = Math.max(0, (int)(posY.get(last)*scale - getHeight()));
+            if(y > maxY)
+                y = maxY;
+        }
+
+        if(x == mOffsetX && y == mOffsetY)
             return;
-        if(x > 0) {
-            int first = mFirstColumn;
-            while (first > 0) {
-                int w = widths.get(--first);
-                x -= w;
-                if(x < 0) {
-                    mOffsetX = x;
-                    break;
-                }
-            }
-            mFirstColumn = first;
-        }
-        else if(-x > widths.get(mFirstColumn)) {
-            int first = mFirstColumn;
-            int w = widths.get(first);
-            while (first + 1 < widths.size()) {
-                x += w;
-                w = widths.get(++first);
-                if(-x < w)
-                    break;
-            }
-            mFirstColumn = first;
-            mOffsetX = x;
-        }
-        else
-            mOffsetX = x;
-
-        if(y > 0) {
-            int first = mFirstRow;
-            while (first > 0) {
-                int h = heights.get(--first);
-                y -= h;
-                if(y < 0) {
-                    mOffsetY = y;
-                    break;
-                }
-            }
-            mFirstRow = first;
-        }
-        else if(-y > heights.get(mFirstRow)) {
-            int first = mFirstRow;
-            int h = heights.get(first);
-            while (first + 1 < heights.size()) {
-                y += h;
-                h = heights.get(++first);
-                if(-y < h)
-                    break;
-            }
-            mFirstRow = first;
-            mOffsetY = y;
-        }
-        else
-            mOffsetY = y;
+        mOffsetX = x;
+        mOffsetY = y;
 
         invalidate();
+    }
+
+    public void scaleBy(float delta, float px, float py) {
+        float scale = delta*mScale;
+        if(scale < 0.1f)
+            scale = .1f;
+        else if(scale > 3)
+            scale = 3;
+        if(mScale == scale)
+            return;
+        mScale = scale;
+
+//        float dx = (scale - preScale)*( + mOffsetX);
+//        float dy = (scale - preScale)*( + mOffsetY);
+        float x = mOffsetX*delta + px*(delta - 1);
+        float y = mOffsetY*delta + py*(delta - 1);
+
+        scrollTo((int) x, (int) y);
+    }
+
+    public int getMaxOffsetX() {
+        ArrayList<Integer> posX = mData.mPosX;
+        int last = posX.size() - 1;
+        if(last == -1)
+            return 0;
+        return Math.max(0, (int)(posX.get(last)*mScale - getWidth()));
+    }
+
+    public int getMaxOffsetY() {
+        ArrayList<Integer> posY = mData.mPosY;
+        int last = posY.size() - 1;
+        if(last == -1)
+            return 0;
+        return Math.max(0, (int)(posY.get(last)*mScale - getHeight()));
     }
 
     public static class CellData {
@@ -268,14 +271,21 @@ public class ExcelView extends View {
     }
 
     public static class SheetData {
+        public static final int X_MUL = 10000;
         public ArrayList<Integer> mRowHeights = new ArrayList<>();
         public ArrayList<Integer> mColWidths = new ArrayList<>();
+        public ArrayList<Integer> mPosX = new ArrayList<>();
+        public ArrayList<Integer> mPosY = new ArrayList<>();
         public HashMap<Integer, CellData> mCellData = new HashMap<>();
+        public int mGap;
 
         public SheetData (Sheet sheet, float density) {
             ArrayList<Integer> heights = mRowHeights;
             ArrayList<Integer> widths = mColWidths;
+            ArrayList<Integer> posX = mPosX;
+            ArrayList<Integer> posY = mPosY;
             HashMap<Integer, CellData> cells = mCellData;
+            mGap = Math.max((int)density, 1);
 
             for(int i = 0; i < sheet.getNumMergedRegions(); i++) {
                 CellRangeAddress range = sheet.getMergedRegion(i);
@@ -286,12 +296,12 @@ public class ExcelView extends View {
                 data.spanX = range.getLastColumn() - firstColumn;
                 data.spanY = range.getLastRow() - firstRow;
                 data.value = getCellValue(cell);
-                cells.put((firstRow * 1000 + firstColumn), data);
+                cells.put((firstRow * X_MUL + firstColumn), data);
                 int lastCol = range.getLastColumn();
                 for(int k = 1 + firstColumn; k <= lastCol; k++) {
                     data = new CellData();
                     data.spanX = firstColumn - k;
-                    cells.put((firstRow*1000 + k), data);
+                    cells.put((firstRow*X_MUL + k), data);
                 }
 
                 for(int k = 1 + firstRow; k <= range.getLastRow(); k++) {
@@ -299,28 +309,39 @@ public class ExcelView extends View {
                         data = new CellData();
                         data.spanX = firstColumn - j;
                         data.spanY = firstRow - k;
-                        cells.put((k*1000 + j), data);
+                        cells.put((k*X_MUL + j), data);
                     }
                 }
             }
 
             int colCount = 0;
+            int y = 0, x = 0;
+            int gap = mGap;
             for(int i = sheet.getFirstRowNum(); i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if(row == null) {
-                    heights.add((int)(sheet.getDefaultRowHeight()*density/8));
+                    int h = (int)(sheet.getDefaultRowHeight()*density/8);
+                    heights.add(h);
+                    y += h + gap;
+                    posY.add(y);
                     continue;
                 }
-                heights.add((int)(row.getHeight()*density/8));
+                int h = ((int)(row.getHeight()*density/8));
+                heights.add(h);
+                y += h + gap;
+                posY.add(y);
                 int cc = row.getLastCellNum();
 
                 for(int j = row.getFirstCellNum(); j <= cc; j++) {
                     if(colCount <= cc) {
-                        widths.add((int)(sheet.getColumnWidth(colCount)*density/20));
+                        int w = (int)(sheet.getColumnWidth(colCount)*density/20);
+                        widths.add(w);
+                        x += w + gap;
+                        posX.add(x);
                         colCount++;
                     }
 
-                    int index = 1000*i + j;
+                    int index = X_MUL*i + j;
                     if(cells.containsKey(index))
                         continue;
                     Cell cell = row.getCell(j);
@@ -360,17 +381,28 @@ public class ExcelView extends View {
     }
 
     public static class GestureController implements View.OnTouchListener,
-            GestureDetector.OnGestureListener {
+            GestureDetector.OnGestureListener,
+            ScaleGestureDetector.OnScaleGestureListener,
+            Runnable {
         private ExcelView mView;
         private GestureDetector mDetector;
+        private ScaleGestureDetector mScaleDetector;
+        private float mInitialSpan = 0;
+        private Scroller mScroller;
 
         public GestureController(ExcelView view) {
             mView = view;
-            mDetector = new GestureDetector(view.getContext(), this);
+            Context context = view.getContext();
+            mDetector = new GestureDetector(context, this);
+            mScaleDetector = new ScaleGestureDetector(context, this);
+            mScroller = new Scroller(context);
         }
 
         @Override
         public boolean onDown(MotionEvent e) {
+            if(!mScroller.isFinished()){
+                mScroller.abortAnimation();
+            }
             return true;
         }
 
@@ -386,7 +418,8 @@ public class ExcelView extends View {
 
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            mView.scrollBy(-(int)distanceX, -(int)distanceY);
+            if(mInitialSpan == 0)
+                mView.scrollBy((int)distanceX, (int)distanceY);
             return true;
         }
 
@@ -397,12 +430,55 @@ public class ExcelView extends View {
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            return false;
+            mScroller.fling(mView.mOffsetX, mView.mOffsetY, -(int)velocityX, -(int)velocityY,
+                    0, mView.getMaxOffsetX(), 0, mView.getMaxOffsetY());
+            run();
+            return true;
+        }
+
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            ExcelView view = mView;
+            float scale = detector.getScaleFactor();
+            view.scaleBy(scale, detector.getFocusX(), detector.getFocusY());
+            return true;
+        }
+
+        @Override
+        public boolean onScaleBegin(ScaleGestureDetector detector) {
+            mInitialSpan = detector.getCurrentSpan();
+            return true;
+        }
+
+        @Override
+        public void onScaleEnd(ScaleGestureDetector detector) {
+            mInitialSpan = 0;
         }
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
-            return mDetector.onTouchEvent(event);
+            mScaleDetector.onTouchEvent(event);
+            mDetector.onTouchEvent(event);
+            return true;
+        }
+
+        @Override
+        public void run() {
+            if(mScroller.computeScrollOffset()) {
+                int x = mScroller.getCurrX();
+                int y = mScroller.getCurrY();
+                mView.mOffsetX = x;
+                mView.mOffsetY = y;
+                mView.invalidate();
+                mView.post(this);
+            }
         }
     }
+
+    private static final Comparator<Number> NUM_COMPARATOR = new Comparator<Number>() {
+        @Override
+        public int compare(Number lhs, Number rhs) {
+            return (int)((lhs.doubleValue() - rhs.doubleValue())*10000);
+        }
+    };
 }
