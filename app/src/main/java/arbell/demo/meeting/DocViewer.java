@@ -206,6 +206,16 @@ public class DocViewer extends Activity implements View.OnClickListener {
     }
 
     @Override
+    public void onBackPressed() {
+        if(sPreach.getMode() == Preach.FOLLOW) {
+            Toast.makeText(this, "跟随中，无法操作",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    @Override
     public void onClick(View v) {
         if(sPreach.getMode() == Preach.FOLLOW) {
             Toast.makeText(this, "跟随中，无法操作",

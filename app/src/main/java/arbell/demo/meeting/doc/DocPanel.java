@@ -111,7 +111,7 @@ public class DocPanel {
                                 doc.id = file.optString("id");
                                 subject.mDocs.add(doc);
                             }
-                            addTab(0, "公共资料", adapter);
+                            addTab(0, "公共资料", null, adapter);
                             AsyncTask.execute(new GetDocUrl(adapter));
                             if(mSelectedTopic == null) {
                                 mTopicControl.onClick(mTabPanel.getChildAt(0));
@@ -188,7 +188,13 @@ public class DocPanel {
                                     }
                                 }
                             }
-                            addTab(-1, "议题" + ++i, adapter);
+                            String dept = null;
+                            if(json.has("dep_name")) {
+                                dept = json.optString("dep_name");
+                                if(dept.length() == 0)
+                                    dept = null;
+                            }
+                            addTab(-1, "议题" + ++i, dept, adapter);
                             AsyncTask.execute(new GetDocUrl(adapter));
                         }
                         if(mSelectedTopic == null && mTabPanel.getChildCount() > 0) {
@@ -226,18 +232,33 @@ public class DocPanel {
             return mTabPanel.indexOfChild(mSelectedTopic);
     }
 
-    private void addTab(int index, String name, TopicAdapter adapter) {
-        TextView tv = (TextView)mActivity.getLayoutInflater().
+    private void addTab(int index, String name, String dept, TopicAdapter adapter) {
+        View tab = mActivity.getLayoutInflater().
                 inflate(R.layout.topic_button, mTabPanel, false);
+        TextView tv = (TextView)tab.findViewById(R.id.title);
         tv.setText(name);
-        if(index == 0) {
-            mTabPanel.addView(tv, 0);
+        tv = (TextView)tab.findViewById(R.id.dept);
+        if(dept == null) {
+            tv.setVisibility(View.GONE);
         }
         else {
-            mTabPanel.addView(tv);
+            tv.setText(dept);
         }
-        mTopicMap.put(tv, adapter);
-        tv.setOnClickListener(mTopicControl);
+        View divider = new View(mActivity);
+        divider.setBackgroundColor(0xff333333);
+        if(index == 0) {
+            mTabPanel.addView(tab, 0);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1);
+            mTabPanel.addView(divider, 1, lp);
+        }
+        else {
+            mTabPanel.addView(tab);
+            mTabPanel.addView(divider, LinearLayout.LayoutParams.MATCH_PARENT, 1);
+        }
+        mTopicMap.put(tab, adapter);
+        tab.setOnClickListener(mTopicControl);
     }
 
     /*private void setupDocs() {
