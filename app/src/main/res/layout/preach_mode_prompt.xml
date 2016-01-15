@@ -11,7 +11,7 @@
         android:id="@+id/normal"
         android:gravity="center"
         android:text="普通主讲"
-        android:textSize="28sp"
+        android:textSize="28dp"
         android:background="?android:attr/selectableItemBackground"/>
     <View
         android:layout_width="match_parent"
@@ -24,6 +24,6 @@
         android:id="@+id/force"
         android:gravity="center"
         android:text="强制主讲"
-        android:textSize="28sp"
+        android:textSize="28dp"
         android:background="?android:attr/selectableItemBackground"/>
 </LinearLayout>

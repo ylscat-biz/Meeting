@@ -75,7 +75,7 @@ public class VoteController implements View.OnClickListener, AdapterView.OnItemC
 //            }
 //            else {
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(mDialog.getContext(),
-                android.R.layout.simple_list_item_single_choice, options);
+                R.layout.simple_list_item_single_choice, options);
 
         ListView lv = (ListView) mDialog.findViewById(R.id.vote_list);
         lv.setItemsCanFocus(false);
@@ -122,6 +122,8 @@ public class VoteController implements View.OnClickListener, AdapterView.OnItemC
 
                 @Override
                 public void complete(File file) {
+                    if(file == null)
+                        return;
                     mSign =  BitmapFactory.decodeFile(file.getAbsolutePath());
                     FingerPaintView fpv = (FingerPaintView) mDialog.findViewById(R.id.sign);
                     fpv.set(mSign);

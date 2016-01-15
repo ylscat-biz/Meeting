@@ -8,7 +8,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:text="设置"
-        android:textSize="28sp"/>
+        android:textSize="28dp"/>
     <EditText
         android:id="@+id/input"
         android:layout_width="300dp"

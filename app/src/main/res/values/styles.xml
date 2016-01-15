@@ -6,7 +6,7 @@
     </style>
 
     <style name="TextViewStyle" parent="android:Widget.TextView">
-        <item name="android:textAppearance">@android:style/TextAppearance.DeviceDefault.Large</item>
+        <item name="android:textSize">20dp</item>
     </style>
 
     <style name="ButtonStyle" >
@@ -40,7 +40,7 @@
     </style>
 
     <style name="InfoLabel">
-        <item name="android:textSize">26sp</item>
+        <item name="android:textSize">26dp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/dark_blue</item>
         <item name="android:layout_marginLeft">100dp</item>

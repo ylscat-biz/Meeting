@@ -13,7 +13,7 @@
               android:layout_gravity="center"
               android:layout_marginTop="5dp"
               android:maxWidth="200dp"
-              android:textSize="18sp"
+              android:textSize="18dp"
               android:gravity="center"
               android:lines="2"
               android:ellipsize="end"

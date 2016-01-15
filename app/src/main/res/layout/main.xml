@@ -14,7 +14,7 @@
             <TextView android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
                 android:textColor="@android:color/black"
-                android:textSize="35sp"
+                android:textSize="35dp"
                 android:text="@string/sys_name" />
 
             <EditText android:id="@+id/name"
