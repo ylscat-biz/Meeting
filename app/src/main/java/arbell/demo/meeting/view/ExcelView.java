@@ -73,9 +73,9 @@ public class ExcelView extends View {
         if(posX.size() == 0 || posY.size() == 0)
             return;
 
-        firstCol = Math.max(0, findProperIndex(posX, mOffsetX/scale) - 1);
+        firstCol = Math.max(0, findProperIndex(posX, mOffsetX/scale));
         lastCol = Math.min(posX.size() - 1, findProperIndex(posX, (mOffsetX + w)/scale));
-        firstRow = Math.max(0, findProperIndex(posY, mOffsetY/scale) - 1);
+        firstRow = Math.max(0, findProperIndex(posY, mOffsetY/scale));
         lastRow = Math.min(posY.size() - 1, findProperIndex(posY, (mOffsetY + h)/scale));
 
 
@@ -175,14 +175,15 @@ public class ExcelView extends View {
         int end = str.length();
         float ty = -paint.ascent();
         for(int line = 0; line < maxLines; ) {
-            if(++line == maxLines)
-                len += 1;
+//            if(++line == maxLines)
+//                len += 1;
             canvas.drawText(str, start, start + len, 0, ty, paint);
             start += len;
             if(start == end)
                 break;
             len = paint.breakText(str, start, end, true, w, null);
             ty += size;
+            line++;
         }
     }
 
