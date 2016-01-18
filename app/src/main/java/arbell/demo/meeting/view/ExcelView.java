@@ -131,13 +131,84 @@ public class ExcelView extends View {
 
                         canvas.restore();
                     }
-                } /*else {
-                    if(r == mFirstRow && cellData.spanY < 0) {
-                        if(c == mFirstColumn || cellData.spanX >= -1) {
+                } else
+borderMerge:    {
+                    if(r == firstRow && cellData.spanY < 0) {
+                        int sRow = r + cellData.spanY;
+                        int sCol = c + cellData.spanX;
+                        CellData src = data.get(sRow*SheetData.X_MUL + sCol);
+                        //只在最后一列，绘制一次
+                        if(src.spanX > -cellData.spanX)
+                            break borderMerge;
 
+                        float right = x + w;
+                        float bottom = y + h;
+                        for(int i = -cellData.spanY + 1; i <= src.spanY; i++) {
+                            bottom += rowHeights.get(sRow + i)*scale + gap;
+                        }
+
+                        float left = x;
+                        for(int i = c - 1; i >= sCol; i--) {
+                            left -= colWidths.get(i)*scale + gap;
+                        }
+                        float top = y;
+                        for(int i = r - 1; i >= sRow; i--) {
+                            top -= rowHeights.get(i)*scale + gap;
+                        }
+
+                        canvas.drawRect(left, top, right, bottom, paint);
+                        String str = src.value;
+                        if(str != null) {
+                            paint.setColor(Color.BLACK);
+
+                            canvas.save();
+                            canvas.clipRect(left, top, right, bottom);
+                            canvas.translate(left, top);
+                            drawText(str, canvas, paint, right - left, bottom - top);
+
+                            canvas.restore();
                         }
                     }
-                }*/
+                    else if(c == firstCol && cellData.spanX < 0) {
+                        int sRow = r + cellData.spanY;
+                        int sCol = c + cellData.spanX;
+                        CellData src = data.get(sRow*SheetData.X_MUL + sCol);
+                        //只在最后一行，绘制一次
+                        if(src.spanY > -cellData.spanY)
+                            break borderMerge;
+                        //如果同时单元格合并了多列，那么已经被处理了，不用再画了
+//                        if(src.spanX > 0)
+//                            continue;
+
+                        float bottom = y + h;
+                        float right = x + w;
+                        for(int i = -cellData.spanX + 1; i <= src.spanX; i++) {
+                            right += colWidths.get(sCol + i)*scale + gap;
+                        }
+
+                        float left = x;
+                        for(int i = c - 1; i >= sCol; i--) {
+                            left -= colWidths.get(i)*scale + gap;
+                        }
+                        float top = y;
+                        for(int i = r - 1; i >= sRow; i--) {
+                            top -= rowHeights.get(i)*scale + gap;
+                        }
+
+                        canvas.drawRect(left, top, right, bottom, paint);
+                        String str = src.value;
+                        if(str != null) {
+                            paint.setColor(Color.BLACK);
+
+                            canvas.save();
+                            canvas.clipRect(left, top, right, bottom);
+                            canvas.translate(left, top);
+                            drawText(str, canvas, paint, right - left, bottom - top);
+
+                            canvas.restore();
+                        }
+                    }
+                }
                 x += w + gap;
             }
             y += h + gap;
