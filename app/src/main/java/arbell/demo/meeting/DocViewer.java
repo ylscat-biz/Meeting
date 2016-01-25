@@ -50,6 +50,8 @@ import arbell.demo.meeting.network.UploadRequest;
 import arbell.demo.meeting.preach.Preach;
 import arbell.demo.meeting.preach.PreachControllerL2;
 import arbell.demo.meeting.view.ExcelView;
+import uk.co.senab.photoview.PhotoViewAttacher;
+
 
 import static arbell.demo.meeting.Meeting.sPreach;
 
@@ -78,6 +80,7 @@ public class DocViewer extends Activity implements View.OnClickListener {
     public String topicId, subjectId, fileId, topicIndex = "0";
 
     private VideoView mVideoView;
+    private PhotoViewAttacher mAttacher;
 
     public static PreachControllerL2 sPreachController;
 
@@ -198,6 +201,8 @@ public class DocViewer extends Activity implements View.OnClickListener {
         if(mCore != null) {
             mCore.onDestroy();
         }
+        if(mAttacher != null)
+            mAttacher.cleanup();
         if(sPreach.getMode() == Preach.PREACH) {
             String msg = String.format("1 %s", topicIndex);
             sPreach.upload(msg);
@@ -353,6 +358,8 @@ public class DocViewer extends Activity implements View.OnClickListener {
             ImageView iv = new ImageView(this);
             Bitmap bm = BitmapFactory.decodeFile(doc.getPath());
             iv.setImageBitmap(bm);
+            mAttacher = new PhotoViewAttacher(iv);
+            mAttacher.setMaximumScale(5);
             ViewGroup vg = (ViewGroup)findViewById(R.id.container);
             vg.addView(iv, 0);
             mPageBar.setVisibility(View.GONE);
