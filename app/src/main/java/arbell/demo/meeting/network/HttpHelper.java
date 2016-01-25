@@ -25,9 +25,9 @@ public class HttpHelper {
 
     public static final String SETTINGS = "settings";
     public static final String SERVER = "server";
-    public static final String DEFAULT_SERVER = "http://222.221.6.114:8066";
-    public static String URL_BASE = "http://222.221.6.114:8066/app/";
-    public static String URL_SERVER = "http://222.221.6.114:8066";
+    public static final String DEFAULT_SERVER = "http://192.168.1.100";
+    public static String URL_BASE = DEFAULT_SERVER + "/app/";
+    public static String URL_SERVER = DEFAULT_SERVER;
 
     public static void test(Activity activity) {
         Volley.newRequestQueue(activity, new HurlStack());
