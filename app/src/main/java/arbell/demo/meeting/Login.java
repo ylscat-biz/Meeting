@@ -2,9 +2,13 @@ package arbell.demo.meeting;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Bundle;
+import android.net.Uri;
+import android.os.*;
+import android.os.Process;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
@@ -15,6 +19,10 @@ import com.android.volley.Response;
 
 import org.json.JSONObject;
 
+import java.io.File;
+
+import arbell.demo.meeting.doc.DownloadTask;
+import arbell.demo.meeting.doc.DownloadTask2;
 import arbell.demo.meeting.network.HttpHelper;
 import arbell.demo.meeting.network.Request;
 
@@ -56,6 +64,26 @@ public class Login extends Activity implements View.OnClickListener {
             EditText et = (EditText)findViewById(R.id.name);
             et.setText(name);
         }
+
+        Request request = new Request(Request.Method.GET,
+                HttpHelper.URL_BASE + "getVersion",
+                null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        if(!response.optBoolean("success")) {
+                            Toast.makeText(Login.this,
+                                    response.optString("msg"),
+                                    Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        JSONObject data = response.optJSONObject("data");
+                        if(data != null) {
+                            checkVersion(data);
+                        }
+                    }
+                });
+        HttpHelper.sRequestQueue.add(request);
     }
 
     @Override
@@ -152,5 +180,109 @@ public class Login extends Activity implements View.OnClickListener {
             }
         });
         dialog.show();
+    }
+
+    private void checkVersion(JSONObject json) {
+        SharedPreferences sp = getSharedPreferences(SP_NAME, MODE_PRIVATE);
+        int current = sp.getInt("current_ver", -1);
+        if(current == -1 || current < BuildConfig.VERSION_CODE) {
+            SharedPreferences.Editor editor = sp.edit();
+            editor.putInt("current_ver", BuildConfig.VERSION_CODE);
+            String time = sp.getString("pending_time", json.optString("add_time"));
+            editor.putString("ver_time", time);
+            editor.apply();
+            cleanDownloadFile();
+        }
+        else {
+            String now = json.optString("add_time");
+            String pre = sp.getString("ver_time", now);
+            if(!now.equals(pre)) {
+                SharedPreferences.Editor editor = sp.edit();
+                editor.putString("pending_time", now);
+                editor.apply();
+                promptUpgrade(json);
+            }
+        }
+    }
+
+    private void promptUpgrade(final JSONObject json) {
+        final Dialog dialog = new Dialog(this, android.R.style.
+                Theme_DeviceDefault_Light_Dialog_NoActionBar);
+        dialog.setContentView(R.layout.prompt_upgrade);
+        dialog.findViewById(R.id.ok).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String fileName = json.optString("file_name");
+                String path = json.optString("path");
+                String url = HttpHelper.URL_SERVER + "/" + path + "/" + fileName;
+                File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+                        fileName);
+                downloadUpgrade(url, file);
+                dialog.dismiss();
+            }
+        });
+        dialog.findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
+    }
+
+    private void downloadUpgrade(String url, File file) {
+        final ProgressDialog dialog = new ProgressDialog(this);
+        dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        dialog.setCancelable(true);
+        dialog.show();
+
+
+        DownloadTask.DownloadListener downloadListener =
+                new DownloadTask.DownloadListener() {
+                    @Override
+                    public void begin(int totalSize) {
+                        dialog.setProgress(0);
+                    }
+
+                    @Override
+                    public void update(int progress, int total) {
+                        int p = progress * 100 / total;
+                        dialog.setProgress(p);
+                    }
+
+                    @Override
+                    public void complete(File file) {
+                        dialog.dismiss();
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // without this flag android returned a intent error!
+                        startActivity(intent);
+                    }
+                };
+        final DownloadTask2 task = new DownloadTask2(downloadListener,
+                url, file);
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialogInterface) {
+                task.cancel();
+            }
+        });
+
+        task.execute();
+    }
+
+    private void cleanDownloadFile() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+                File dir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                if(dir == null)
+                    return;
+                for(File d : dir.listFiles()) {
+                    d.delete();
+                }
+            }
+        }).start();
     }
 }
