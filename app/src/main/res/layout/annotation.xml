@@ -5,13 +5,15 @@
               android:orientation="vertical">
 <LinearLayout
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="@color/dark_blue">
     <TextView
         android:id="@+id/annotation_share"
         android:layout_width="0px"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="共享摘要"
+        android:textColor="@color/tab"
         android:gravity="center"
         android:background="@drawable/tab_bg"
         android:paddingTop="3dp"
@@ -22,6 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="我的摘要"
+        android:textColor="@color/tab"
         android:gravity="center"
         android:background="@drawable/tab_bg"
         android:paddingTop="3dp"
