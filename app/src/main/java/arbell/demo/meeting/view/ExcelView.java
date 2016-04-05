@@ -389,6 +389,14 @@ borderMerge:    {
             int colCount = 0;
             int y = 0, x = 0;
             int gap = mGap;
+
+            for(int i = 0; i < sheet.getFirstRowNum(); i++) {
+                int h = (int)(sheet.getDefaultRowHeight()*density/8);
+                heights.add(h);
+                y += h + gap;
+                posY.add(y);
+            }
+
             for(int i = sheet.getFirstRowNum(); i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if(row == null) {
@@ -405,7 +413,7 @@ borderMerge:    {
                 int cc = row.getLastCellNum();
 
                 for(int j = row.getFirstCellNum(); j <= cc; j++) {
-                    if(colCount <= cc) {
+                    while (colCount <= cc) {
                         int w = (int)(sheet.getColumnWidth(colCount)*density/20);
                         widths.add(w);
                         x += w + gap;
@@ -445,7 +453,17 @@ borderMerge:    {
                 case Cell.CELL_TYPE_BOOLEAN:
                     return Boolean.toString(cell.getBooleanCellValue());
                 case Cell.CELL_TYPE_FORMULA:
-                    return cell.getCellFormula();
+                    try {
+                        v = cell.getNumericCellValue();
+                        l = (long)v;
+                        if(l == v)
+                            return String.valueOf(l);
+                        else
+                            return Double.toString(v);
+                    }
+                    catch (IllegalStateException e){
+                        return cell.getCellFormula();
+                    }
                 default:
                     return null;
             }
